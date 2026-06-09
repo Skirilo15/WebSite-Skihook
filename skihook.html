@@ -1,0 +1,3202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SkiHook [beta]</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0f0f1a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(124,106,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      animation: pulseGlow 6s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+      50%       { opacity: 1;   transform: translateX(-50%) scale(1.15); }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(22,22,42,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #2a2a4a;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    nav .logo img { height: 38px; }
+
+    nav ul { list-style: none; display: flex; align-items: center; gap: 4px; }
+
+    nav ul li a {
+      color: #aaa; text-decoration: none;
+      font-size: 0.9rem; font-weight: 500;
+      padding: 6px 13px; border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    nav ul li a:hover { color: #fff; background: rgba(124,106,255,0.15); }
+    nav ul li a.active { color: #fff; background: rgba(124,106,255,0.2); }
+
+    .btn-login-nav {
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      color: #fff; border: none;
+      padding: 7px 18px; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-login-nav:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .user-menu { position: relative; }
+
+    .user-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(124,106,255,0.15);
+      border: 1px solid rgba(124,106,255,0.3);
+      color: #fff; padding: 6px 12px; border-radius: 8px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .user-btn:hover { background: rgba(124,106,255,0.25); }
+
+    .avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: #fff;
+    }
+
+    .user-dropdown {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: #1a1a2e; border: 1px solid #2e2e50;
+      border-radius: 10px; min-width: 140px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+
+    .user-dropdown.open { display: block; animation: fadeSlideIn 0.15s ease; }
+
+    .user-dropdown a {
+      display: block; padding: 10px 16px;
+      color: #aaa; text-decoration: none; font-size: 0.88rem;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .user-dropdown a:hover { background: rgba(124,106,255,0.15); color: #fff; }
+    .user-dropdown a.danger:hover { background: rgba(255,80,80,0.12); color: #ff6060; }
+
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeSlideIn 0.32s ease; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── HOME ── */
+    .hero {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: calc(100vh - 60px);
+      padding: 40px 20px; text-align: center;
+      position: relative; z-index: 1;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: rgba(124,106,255,0.15);
+      border: 1px solid rgba(124,106,255,0.35);
+      color: #a090ff; font-size: 0.76rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 20px; margin-bottom: 22px;
+      animation: fadeSlideIn 0.5s ease 0.1s both;
+    }
+
+    .hero h1 {
+      font-size: 4rem; font-weight: 900; color: #fff;
+      margin-bottom: 18px; line-height: 1.1;
+      animation: fadeSlideIn 0.5s ease 0.2s both;
+    }
+
+    .hero h1 span { color: #7c6aff; text-shadow: 0 0 40px rgba(124,106,255,0.5); }
+
+    .hero p {
+      color: #888; font-size: 1.15rem;
+      max-width: 500px; line-height: 1.7; margin-bottom: 40px;
+      animation: fadeSlideIn 0.5s ease 0.3s both;
+    }
+
+    .social-buttons {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+      animation: fadeSlideIn 0.5s ease 0.4s both;
+    }
+
+    .btn-yt, .btn-dc {
+      display: flex; align-items: center; gap: 12px;
+      color: #fff; text-decoration: none;
+      padding: 16px 36px; border-radius: 14px;
+      font-size: 1.05rem; font-weight: 700;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-yt { background: #ff0000; box-shadow: 0 6px 24px rgba(255,0,0,0.35); }
+    .btn-yt:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 12px 36px rgba(255,0,0,0.55); }
+
+    .btn-dc { background: #5865f2; box-shadow: 0 6px 24px rgba(88,101,242,0.35); }
+    .btn-dc:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 12px 36px rgba(88,101,242,0.55); }
+
+    /* ── SCRIPTS ── */
+    .scripts-section { padding: 50px 40px 80px; position: relative; z-index: 1; }
+
+    .scripts-section h2 {
+      text-align: center; font-size: 1.1rem; color: #555;
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 36px;
+    }
+
+    .scripts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px; max-width: 1100px; margin: 0 auto;
+    }
+
+    .card {
+      background: #16162a; border: 1px solid #2a2a4a;
+      border-radius: 14px; padding: 22px 20px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+      opacity: 0; transform: translateY(24px);
+    }
+
+    .card.visible { animation: cardIn 0.4s ease forwards; }
+    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+    .card:hover { border-color: #7c6aff; transform: translateY(-4px); box-shadow: 0 8px 30px rgba(124,106,255,0.18); }
+
+    .card-top { display: flex; align-items: center; justify-content: space-between; }
+    .card-name { font-size: 1rem; font-weight: 700; color: #fff; }
+
+    .badge {
+      font-size: 0.66rem; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px; letter-spacing: 0.5px;
+    }
+
+    .badge-free   { background: rgba(100,220,120,0.12); color: #64dc78; border: 1px solid rgba(100,220,120,0.25); }
+    .badge-key    { background: rgba(255,180,0,0.14);   color: #ffb400; border: 1px solid rgba(255,180,0,0.3); }
+    .badge-premium{ background: rgba(200,120,255,0.14); color: #cc88ff; border: 1px solid rgba(200,120,255,0.3); }
+    .badge-owned  { background: rgba(80,180,255,0.14);  color: #60c8ff; border: 1px solid rgba(80,180,255,0.3); }
+
+    .card-game { font-size: 0.8rem; color: #555; }
+    .card-key-note { font-size: 0.75rem; color: #ffb40088; }
+
+    .card-configs { margin-top: 14px; padding-top: 12px; border-top: 1px solid #1e1e38; }
+    .card-configs-title { font-size: 0.72rem; color: #7c6aff; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .card-configs-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .btn-config-dl {
+      padding: 5px 12px; border-radius: 7px; font-size: 0.75rem; font-weight: 600;
+      background: rgba(124,106,255,0.12); border: 1px solid rgba(124,106,255,0.3);
+      color: #a898ff; text-decoration: none; transition: background 0.2s, color 0.2s;
+    }
+    .btn-config-dl:hover { background: rgba(124,106,255,0.25); color: #fff; }
+
+    .btn-card {
+      margin-top: 4px;
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      color: #fff; border: none;
+      padding: 10px 0; border-radius: 9px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(124,106,255,0.25);
+    }
+
+    .btn-card:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(124,106,255,0.5); }
+
+    .btn-card-buy {
+      background: linear-gradient(135deg, #cc88ff, #9944dd);
+      box-shadow: 0 4px 14px rgba(180,80,255,0.25);
+    }
+
+    .btn-card-buy:hover { box-shadow: 0 7px 22px rgba(180,80,255,0.5); }
+
+    /* ── PROFILE PAGE ── */
+    .profile-page {
+      max-width: 600px; margin: 60px auto; padding: 0 20px;
+      position: relative; z-index: 1;
+    }
+
+    .profile-header {
+      display: flex; align-items: center; gap: 20px;
+      background: #16162a; border: 1px solid #2a2a4a;
+      border-radius: 16px; padding: 28px 24px; margin-bottom: 24px;
+    }
+
+    .profile-avatar-lg {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .avatar-upload-zone {
+      position: relative; width: 64px; height: 64px; border-radius: 50%;
+      cursor: pointer; flex-shrink: 0; overflow: hidden;
+      border: 2px solid transparent; transition: border-color 0.2s;
+    }
+    .avatar-upload-zone:hover, .avatar-upload-zone.drag-over {
+      border-color: #7c6aff;
+    }
+    .avatar-upload-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,0.55); display: flex; align-items: center;
+      justify-content: center; font-size: 1.3rem;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .avatar-upload-zone:hover .avatar-upload-overlay,
+    .avatar-upload-zone.drag-over .avatar-upload-overlay { opacity: 1; }
+
+    .profile-info h2 { color: #fff; font-size: 1.3rem; margin-bottom: 4px; }
+    .profile-info p  { color: #666; font-size: 0.85rem; }
+    .profile-days { display: inline-flex; align-items: baseline; gap: 5px; margin-top: 8px; background: rgba(124,106,255,0.12); border: 1px solid rgba(124,106,255,0.25); border-radius: 20px; padding: 4px 12px; }
+    .profile-days-num { color: #a898ff; font-size: 1rem; font-weight: 800; }
+    .profile-days-label { color: #7c6aff; font-size: 0.75rem; font-weight: 600; }
+
+    /* ── ADMIN PANEL ── */
+    .admin-page { max-width: 900px; margin: 0 auto; padding: 40px 20px 60px; }
+    .admin-header { margin-bottom: 28px; }
+    .admin-header h2 { font-size: 1.6rem; color: #fff; font-weight: 800; margin-bottom: 18px; }
+    .admin-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .admin-stat { background: #12121f; border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px 22px; min-width: 100px; }
+    .admin-stat-num { font-size: 1.6rem; font-weight: 800; color: #a898ff; }
+    .admin-stat-label { font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+    .admin-table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid #2a2a4a; }
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table thead tr { background: #0e0e1c; }
+    .admin-table th { padding: 12px 14px; text-align: left; font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; border-bottom: 1px solid #2a2a4a; }
+    .admin-row { border-bottom: 1px solid #1a1a30; transition: background 0.15s; }
+    .admin-row:last-child { border-bottom: none; }
+    .admin-row:hover { background: rgba(124,106,255,0.05); }
+    .admin-row-banned { opacity: 0.6; }
+    .admin-row td { padding: 11px 14px; vertical-align: middle; }
+    .admin-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .admin-badge-active { background: rgba(100,220,120,0.12); color: #64dc78; border: 1px solid rgba(100,220,120,0.25); }
+    .admin-badge-banned { background: rgba(255,40,40,0.12); color: #ff4444; border: 1px solid rgba(255,40,40,0.25); }
+    .admin-btn { font-size: 0.73rem; font-weight: 700; padding: 4px 10px; border-radius: 7px; border: none; cursor: pointer; transition: opacity 0.15s; }
+    .admin-btn:hover { opacity: 0.8; }
+    .admin-btn-red { background: rgba(255,40,40,0.15); color: #ff4444; border: 1px solid rgba(255,40,40,0.3); }
+    .admin-btn-green { background: rgba(100,220,120,0.12); color: #64dc78; border: 1px solid rgba(100,220,120,0.25); }
+    .admin-btn-grey { background: rgba(255,255,255,0.07); color: #888; border: 1px solid #333; }
+    .admin-btn-blue { background: rgba(100,180,255,0.12); color: #6ab4ff; border: 1px solid rgba(100,180,255,0.3); }
+
+    /* ── SEARCH / FILTER ── */
+    .scripts-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
+    .script-search-input { flex:1; min-width:160px; background:#12121f; border:1px solid #2a2a4a; border-radius:10px; padding:9px 14px; color:#e0e0e0; font-size:0.88rem; outline:none; transition:border-color 0.2s; }
+    .script-search-input:focus { border-color:#7c6aff; }
+    .script-filter-tabs { display:flex; gap:6px; }
+    .sft { background:none; border:1px solid #2a2a4a; color:#666; border-radius:8px; padding:7px 14px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.18s; }
+    .sft:hover { border-color:#7c6aff; color:#a898ff; }
+    .sft.active { background:rgba(124,106,255,0.18); border-color:#7c6aff; color:#a898ff; }
+
+    /* ── RATINGS ── */
+    .card-rating { display:flex; align-items:center; gap:6px; margin-top:8px; }
+    .stars-display { color:#ffb400; font-size:0.9rem; letter-spacing:1px; }
+    .rating-count { color:#555; font-size:0.72rem; }
+    .stars-pick { display:flex; gap:3px; cursor:pointer; }
+    .stars-pick span { font-size:1.1rem; color:#444; transition:color 0.1s; }
+    .stars-pick span.lit { color:#ffb400; }
+    .rate-label { color:#555; font-size:0.72rem; }
+
+    /* ── NOTIFICATIONS ── */
+    .notif-btn { position:relative; background:none; border:none; cursor:pointer; font-size:1.15rem; padding:4px 6px; line-height:1; }
+    .notif-badge { position:absolute; top:-2px; right:-2px; background:#ff4444; color:#fff; font-size:0.6rem; font-weight:800; border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; }
+    .notif-item { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid #1a1a30; }
+    .notif-item:last-child { border-bottom:none; }
+    .notif-item.unread .notif-msg { color:#e0e0e0; }
+    .notif-dot { width:7px; height:7px; border-radius:50%; background:#7c6aff; flex-shrink:0; margin-top:5px; }
+    .notif-dot.read { background:transparent; border:1px solid #333; }
+    .notif-msg { font-size:0.83rem; color:#888; line-height:1.5; }
+    .notif-time { font-size:0.7rem; color:#444; margin-top:2px; }
+    .notif-empty { color:#444; font-size:0.85rem; text-align:center; padding:20px 0; }
+
+    /* ── BIO ── */
+    .bio-section { margin-top:10px; }
+    .bio-text { color:#aaa; font-size:0.85rem; line-height:1.6; font-style:italic; }
+    .bio-placeholder { color:#444; font-size:0.82rem; font-style:italic; }
+    .bio-edit-btn { background:none; border:none; color:#7c6aff; font-size:0.75rem; cursor:pointer; padding:0; margin-left:6px; }
+    .bio-edit-btn:hover { color:#a898ff; }
+    .bio-textarea { width:100%; background:#0e0e1c; border:1px solid #7c6aff; border-radius:8px; color:#e0e0e0; font-size:0.85rem; padding:8px 10px; resize:vertical; min-height:60px; outline:none; font-family:inherit; }
+    .bio-save-btn { margin-top:6px; background:rgba(124,106,255,0.18); border:1px solid rgba(124,106,255,0.35); color:#a898ff; border-radius:8px; padding:5px 14px; font-size:0.78rem; font-weight:700; cursor:pointer; }
+    .bio-save-btn:hover { background:rgba(124,106,255,0.28); }
+
+    /* ── BADGES ── */
+    .badges-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .badge-pill { font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:20px; border:1px solid; }
+
+    .profile-section {
+      background: #16162a; border: 1px solid #2a2a4a;
+      border-radius: 14px; padding: 22px; margin-bottom: 16px;
+    }
+
+    .profile-section h3 {
+      color: #7c6aff; font-size: 0.85rem; letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+
+    .owned-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #22223a;
+    }
+
+    .owned-item:last-child { border-bottom: none; }
+    .owned-item-name { color: #fff; font-size: 0.9rem; font-weight: 600; }
+    .owned-item-game { color: #555; font-size: 0.8rem; }
+
+    .no-owned { color: #555; font-size: 0.88rem; }
+
+    /* ── BAN SCREEN ── */
+    #ban-screen {
+      display: none; position: fixed; inset: 0; z-index: 99999;
+      background: #080810;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 40px;
+      pointer-events: all;
+    }
+
+    #ban-screen.show { display: flex; }
+    body.is-banned { overflow: hidden; pointer-events: none; }
+    body.is-banned #ban-screen { pointer-events: all; }
+
+    .ban-icon { font-size: 5rem; margin-bottom: 24px; animation: banPulse 2s ease-in-out infinite; }
+
+    @keyframes banPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.08); opacity: 0.7; }
+    }
+
+    .ban-title {
+      font-size: 3rem; font-weight: 900; color: #ff2222;
+      margin-bottom: 16px; letter-spacing: 2px;
+      text-shadow: 0 0 40px rgba(255,30,30,0.5);
+    }
+
+    .ban-msg {
+      color: #666; font-size: 1rem; max-width: 420px;
+      line-height: 1.7; margin-bottom: 32px;
+    }
+
+    .ban-discord {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #5865f2; color: #fff; text-decoration: none;
+      padding: 13px 30px; border-radius: 12px;
+      font-size: 0.95rem; font-weight: 700;
+      transition: opacity 0.2s;
+    }
+
+    .ban-discord:hover { opacity: 0.85; }
+
+    /* ── COMMUNITY PAGE ── */
+    .community-page { max-width: 700px; margin: 50px auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    .community-page h2 {
+      text-align: center; font-size: 1.1rem; color: #555;
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px;
+    }
+
+    .user-card {
+      background: #16162a; border: 1px solid #2a2a4a;
+      border-radius: 14px; padding: 18px 20px;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .user-card:hover { border-color: #3a3a6a; }
+
+    .user-card-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+
+    .user-card-info { flex: 1; min-width: 0; }
+    .user-card-name { color: #fff; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .user-card-scripts { color: #555; font-size: 0.78rem; margin-top: 4px; }
+    .user-card-scripts span { color: #7c6aff; }
+
+    .btn-friend {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 8px;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-friend-add {
+      background: rgba(124,106,255,0.15); border: 1px solid rgba(124,106,255,0.3);
+      color: #7c6aff;
+    }
+
+    .btn-friend-add:hover { background: rgba(124,106,255,0.3); }
+
+    .btn-friend-remove {
+      background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.25);
+      color: #ff6060;
+    }
+
+    .btn-friend-remove:hover { background: rgba(255,80,80,0.2); }
+
+    .community-empty { color: #555; text-align: center; padding: 40px 0; font-size: 0.9rem; }
+
+    /* ── SETTINGS TOGGLE ── */
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid #22223a;
+    }
+
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { color: #ccc; font-size: 0.9rem; }
+    .settings-desc  { color: #555; font-size: 0.76rem; margin-top: 2px; }
+
+    .toggle {
+      position: relative; width: 42px; height: 24px; flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute; inset: 0; cursor: pointer;
+      background: #2a2a4a; border-radius: 24px;
+      transition: background 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; left: 3px; top: 3px;
+      transition: transform 0.2s;
+    }
+
+    .toggle input:checked + .toggle-slider { background: #7c6aff; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /* ── OWNER TAG ── */
+    .owner-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: linear-gradient(135deg, rgba(255,180,0,0.2), rgba(255,120,0,0.2));
+      border: 1px solid rgba(255,180,0,0.45);
+      color: #ffb400; font-size: 0.65rem; font-weight: 800;
+      padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .admin-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: linear-gradient(135deg, rgba(100,180,255,0.18), rgba(60,120,255,0.18));
+      border: 1px solid rgba(100,180,255,0.4);
+      color: #6ab4ff; font-size: 0.65rem; font-weight: 800;
+      padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .btn-refund {
+      background: rgba(255,180,0,0.1); border: 1px solid rgba(255,180,0,0.25);
+      color: #ffb400; border-radius: 7px; padding: 5px 12px;
+      font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s; white-space: nowrap;
+    }
+
+    .btn-refund:hover { background: rgba(255,180,0,0.22); }
+
+    .btn-logout {
+      width: 100%; padding: 12px;
+      background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.25);
+      color: #ff6060; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-logout:hover { background: rgba(255,80,80,0.2); }
+
+    /* ── OVERLAYS ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(6px);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+
+    .overlay.active { display: flex; }
+
+    /* ── MODAL BASE ── */
+    .modal {
+      background: #1a1a2e; border: 1px solid #2e2e50;
+      border-radius: 18px; padding: 34px 30px;
+      width: 100%; max-width: 460px; text-align: center;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+      animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .modal h2 { font-size: 1.35rem; color: #fff; margin-bottom: 6px; }
+    .modal-sub { color: #666; font-size: 0.86rem; margin-bottom: 22px; }
+
+    /* ── LOGIN MODAL ── */
+    .auth-tabs {
+      display: flex; gap: 0; margin-bottom: 24px;
+      background: #0f0f1a; border-radius: 10px; padding: 4px;
+    }
+
+    .auth-tab {
+      flex: 1; padding: 8px; border: none; border-radius: 8px;
+      background: transparent; color: #666;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .auth-tab.active { background: #2a2a4a; color: #fff; }
+
+    .form-group { text-align: left; margin-bottom: 14px; }
+
+    .form-group label {
+      display: block; font-size: 0.8rem; color: #888;
+      margin-bottom: 6px; font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%; padding: 10px 14px;
+      background: #0f0f1a; border: 1px solid #2e2e50;
+      border-radius: 9px; color: #fff; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { border-color: #7c6aff; }
+
+    .form-error {
+      color: #ff6060; font-size: 0.8rem;
+      margin-bottom: 12px; min-height: 18px;
+    }
+
+    .btn-auth {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      margin-top: 4px;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(124,106,255,0.35);
+    }
+
+    .btn-auth:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* ── BUY MODAL ── */
+    .buy-price-display {
+      background: rgba(200,120,255,0.08);
+      border: 1px solid rgba(200,120,255,0.2);
+      border-radius: 12px; padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .buy-price-display .price {
+      font-size: 2.2rem; font-weight: 900; color: #cc88ff;
+    }
+
+    .buy-price-display .price-label {
+      font-size: 0.8rem; color: #888; margin-top: 4px;
+    }
+
+    .buy-info {
+      color: #777; font-size: 0.83rem; margin-bottom: 20px; line-height: 1.6;
+    }
+
+    .buy-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn-buy-confirm {
+      padding: 12px;
+      background: linear-gradient(135deg, #cc88ff, #9944dd);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(180,80,255,0.35);
+    }
+
+    .btn-buy-confirm:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-buy-discord {
+      padding: 11px;
+      background: rgba(88,101,242,0.15);
+      border: 1px solid rgba(88,101,242,0.3);
+      color: #8899ff; border-radius: 10px;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; display: block;
+      transition: background 0.2s;
+    }
+
+    .btn-buy-discord:hover { background: rgba(88,101,242,0.25); }
+
+    /* ── SCRIPT MODAL ── */
+    .modal-key-warning {
+      display: none;
+      background: rgba(255,180,0,0.1); border: 1px solid rgba(255,180,0,0.3);
+      border-radius: 8px; padding: 8px 14px;
+      color: #ffb400; font-size: 0.82rem; margin-bottom: 18px;
+    }
+
+    .modal-key-warning.visible { display: block; }
+
+    .modal-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    .btn-get {
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      color: #fff; border: none; padding: 11px 26px; border-radius: 9px;
+      font-size: 0.92rem; font-weight: 600; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(124,106,255,0.3);
+    }
+
+    .btn-get:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,106,255,0.5); }
+
+    .btn-how {
+      background: transparent; color: #7c6aff;
+      border: 1.5px solid #7c6aff; padding: 11px 26px; border-radius: 9px;
+      font-size: 0.92rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-how:hover { background: #7c6aff; color: #fff; }
+
+    .btn-modal-close {
+      margin-top: 18px; background: none; border: none;
+      color: #555; font-size: 0.82rem; cursor: pointer; text-decoration: underline;
+    }
+
+    .btn-modal-close:hover { color: #999; }
+
+    .script-box {
+      display: none; margin-top: 18px; background: #0d0d1a;
+      border: 1px solid #2e2e50; border-radius: 10px; padding: 14px; text-align: left;
+      animation: fadeSlideIn 0.2s ease;
+    }
+
+    .script-box.active { display: block; }
+
+    .script-box code {
+      display: block; color: #a0e0b0;
+      font-family: 'Consolas', monospace; font-size: 0.76rem;
+      word-break: break-all; white-space: pre-wrap;
+    }
+
+    .btn-copy {
+      margin-top: 10px; background: #2a2a4a; color: #aaa;
+      border: 1px solid #3a3a60; padding: 7px 16px; border-radius: 6px;
+      font-size: 0.8rem; cursor: pointer; width: 100%;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-copy:hover { background: #3a3a60; color: #fff; }
+    .btn-copy.copied { background: #2e5e3a; color: #6dff9a; border-color: #3e8e5a; }
+
+    .howto-box {
+      display: none; margin-top: 18px; background: #0d0d1a;
+      border: 1px solid #2e2e50; border-radius: 10px; padding: 16px; text-align: left;
+      animation: fadeSlideIn 0.2s ease;
+    }
+
+    .howto-box.active { display: block; }
+    .howto-box h3 { color: #7c6aff; font-size: 0.92rem; margin-bottom: 10px; }
+    .howto-box ol { padding-left: 18px; color: #aaa; font-size: 0.83rem; line-height: 1.9; }
+    .howto-box ol li span { color: #7c6aff; font-weight: 600; }
+
+    /* ── CART BUTTON (NAV) ── */
+    .cart-nav-btn {
+      position: relative; background: rgba(124,106,255,0.1);
+      border: 1px solid rgba(124,106,255,0.25);
+      color: #aaa; padding: 6px 12px; border-radius: 8px;
+      font-size: 0.88rem; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .cart-nav-btn:hover { background: rgba(124,106,255,0.2); color: #fff; }
+
+    .cart-count {
+      background: #7c6aff; color: #fff;
+      font-size: 0.68rem; font-weight: 700;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    /* ── CART MODAL ── */
+    .cart-modal {
+      background: #1a1a2e; border: 1px solid #2e2e50;
+      border-radius: 18px; padding: 30px 28px;
+      width: 100%; max-width: 480px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+      animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .cart-modal h2 { font-size: 1.35rem; color: #fff; margin-bottom: 6px; }
+    .cart-modal-sub { color: #555; font-size: 0.84rem; margin-bottom: 22px; }
+
+    .cart-empty { color: #555; font-size: 0.9rem; text-align: center; padding: 24px 0; }
+
+    .cart-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid #22223a;
+    }
+
+    .cart-item:last-of-type { border-bottom: none; }
+
+    .cart-item-info { text-align: left; }
+    .cart-item-name { color: #fff; font-size: 0.92rem; font-weight: 600; }
+    .cart-item-game { color: #555; font-size: 0.78rem; margin-top: 2px; }
+    .cart-item-price { color: #cc88ff; font-size: 0.95rem; font-weight: 700; margin: 0 16px; }
+
+    .btn-cart-remove {
+      background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.2);
+      color: #ff6060; border-radius: 6px; padding: 4px 10px;
+      font-size: 0.78rem; cursor: pointer; transition: background 0.15s;
+    }
+
+    .btn-cart-remove:hover { background: rgba(255,80,80,0.22); }
+
+    .cart-total {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 0 20px;
+      border-top: 1px solid #2e2e50; margin-top: 4px;
+    }
+
+    .cart-total-label { color: #888; font-size: 0.88rem; }
+    .cart-total-price { color: #fff; font-size: 1.3rem; font-weight: 800; }
+
+    .btn-checkout {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, #cc88ff, #9944dd);
+      color: #fff; border: none; border-radius: 11px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(180,80,255,0.35);
+      margin-bottom: 10px;
+    }
+
+    .btn-checkout:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-checkout:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── CARD ADD-TO-CART ── */
+    .card-btns { display: flex; gap: 8px; margin-top: 4px; }
+    .card-btns .btn-card { flex: 1; margin-top: 0; }
+
+    .btn-cart-add {
+      flex-shrink: 0; width: 38px; height: 38px; border-radius: 9px;
+      background: rgba(124,106,255,0.15); border: 1px solid rgba(124,106,255,0.3);
+      color: #7c6aff; font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s, transform 0.15s;
+    }
+
+    .btn-cart-add:hover { background: rgba(124,106,255,0.3); transform: scale(1.08); }
+    .btn-cart-add.in-cart { background: rgba(124,106,255,0.3); color: #fff; border-color: #7c6aff; }
+
+    /* ── SUCCESS TOAST ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1e3a2a; border: 1px solid #3e8e5a; color: #6dff9a;
+      padding: 12px 24px; border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 200;
+      transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── ANNOUNCEMENT BANNER ── */
+    #site-announcement { background:linear-gradient(135deg,rgba(124,106,255,0.13),rgba(85,70,224,0.08)); border-bottom:1px solid rgba(124,106,255,0.28); padding:9px 48px 9px 20px; text-align:center; font-size:0.85rem; color:#a898ff; position:relative; z-index:40; animation:fadeSlideIn 0.3s ease; }
+    #site-announcement .ann-close { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#666;cursor:pointer;font-size:1.1rem;line-height:1; }
+    #site-announcement .ann-close:hover { color:#aaa; }
+
+    /* ── SCROLL TO TOP ── */
+    #scroll-top-btn { position:fixed; bottom:80px; right:24px; width:42px; height:42px; border-radius:50%; background:rgba(124,106,255,0.18); border:1px solid rgba(124,106,255,0.35); color:#a898ff; font-size:1.1rem; cursor:pointer; display:none; align-items:center; justify-content:center; z-index:60; transition:background 0.2s; box-shadow:0 4px 14px rgba(0,0,0,0.3); }
+    #scroll-top-btn.visible { display:flex; }
+    #scroll-top-btn:hover { background:rgba(124,106,255,0.32); }
+
+    /* ── LEADERBOARD ── */
+    .leaderboard-page { max-width:700px; margin:50px auto; padding:0 20px 80px; position:relative; z-index:1; }
+    .leaderboard-page h2 { text-align:center; font-size:1.1rem; color:#555; letter-spacing:3px; text-transform:uppercase; margin-bottom:20px; }
+    .lb-tabs { display:flex; gap:8px; margin-bottom:20px; justify-content:center; }
+    .lb-tab { background:none; border:1px solid #2a2a4a; color:#666; border-radius:8px; padding:7px 18px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.18s; }
+    .lb-tab:hover { border-color:#7c6aff; color:#a898ff; }
+    .lb-tab.active { background:rgba(124,106,255,0.18); border-color:#7c6aff; color:#a898ff; }
+    .lb-table-wrap { background:#16162a; border:1px solid #2a2a4a; border-radius:14px; overflow:hidden; }
+    .lb-table { width:100%; border-collapse:collapse; }
+    .lb-table thead tr { background:#0e0e1c; }
+    .lb-table th { padding:11px 16px; text-align:left; font-size:0.72rem; color:#555; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #2a2a4a; }
+    .lb-row { border-bottom:1px solid #1a1a30; transition:background 0.15s; cursor:pointer; }
+    .lb-row:last-child { border-bottom:none; }
+    .lb-row:hover { background:rgba(124,106,255,0.06); }
+    .lb-row td { padding:12px 16px; vertical-align:middle; }
+    .lb-rank { font-size:1rem; font-weight:800; color:#555; }
+    .lb-rank.gold { color:#ffb400; }
+    .lb-rank.silver { color:#aaa; }
+    .lb-rank.bronze { color:#cd7f32; }
+
+    /* ── ONLINE DOT ── */
+    .online-dot { display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0; vertical-align:middle; margin-right:4px; }
+    .online-dot.on { background:#64dc78; box-shadow:0 0 5px rgba(100,220,120,0.7); }
+    .online-dot.off { background:#383856; }
+
+    /* ── WISHLIST ── */
+    .btn-wish { width:38px; height:38px; border-radius:9px; background:rgba(255,100,150,0.08); border:1px solid rgba(255,100,150,0.2); color:#ff6496; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s,transform 0.15s; }
+    .btn-wish:hover { background:rgba(255,100,150,0.2); transform:scale(1.08); }
+    .btn-wish.wished { background:rgba(255,100,150,0.22); color:#ff3b6e; border-color:rgba(255,100,150,0.45); }
+
+    /* ── COPY COUNTER ── */
+    .copy-count-badge { font-size:0.68rem; color:#555; }
+
+    /* ── COMMUNITY SEARCH ── */
+    .community-search-wrap { margin-bottom:16px; }
+    .community-search-input { width:100%; background:#12121f; border:1px solid #2a2a4a; border-radius:10px; padding:9px 14px; color:#e0e0e0; font-size:0.88rem; outline:none; transition:border-color 0.2s; }
+    .community-search-input:focus { border-color:#7c6aff; }
+
+    /* ── THEME TOGGLE ── */
+    .btn-theme { background:none; border:1px solid #2a2a4a; color:#888; border-radius:8px; padding:6px 10px; font-size:0.88rem; cursor:pointer; transition:border-color 0.2s,color 0.2s; }
+    .btn-theme:hover { border-color:#7c6aff; color:#a898ff; }
+
+    /* ── ACCENT COLORS ── */
+    .color-swatches { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .color-sw { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:transform 0.15s,border-color 0.15s; flex-shrink:0; }
+    .color-sw:hover { transform:scale(1.2); }
+    .color-sw.sel { border-color:#fff; transform:scale(1.15); }
+
+    /* ── ADMIN NOTE ── */
+    .admin-note-input { width:100%; background:#0e0e1c; border:1px solid #2a2a4a; border-radius:7px; color:#e0e0e0; font-size:0.78rem; padding:6px 10px; resize:none; min-height:40px; outline:none; font-family:inherit; transition:border-color 0.2s; }
+    .admin-note-input:focus { border-color:#7c6aff; }
+    .admin-note-tag { display:inline-flex; align-items:center; gap:4px; background:rgba(255,180,0,0.1); border:1px solid rgba(255,180,0,0.25); color:#ffb400; font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:20px; }
+
+    /* ── LIGHT THEME ── */
+    body.light { background:#f2f2fc; color:#222; }
+    body.light::before { opacity:0.15; }
+    body.light nav { background:rgba(240,240,252,0.95); border-bottom-color:#ccd; }
+    body.light nav ul li a { color:#666; }
+    body.light nav ul li a.active { color:#333; background:rgba(124,106,255,0.1); }
+    body.light nav ul li a:hover { color:#333; background:rgba(124,106,255,0.08); }
+    body.light .btn-theme { border-color:#ccd; color:#888; }
+    body.light .card { background:#fff; border-color:#dde; }
+    body.light .card-name { color:#111; }
+    body.light .card-game { color:#999; }
+    body.light .card:hover { border-color:#7c6aff; }
+    body.light .card-key-note { color:#e07800; }
+    body.light .modal, body.light .cart-modal { background:#fafafe; border-color:#dde; }
+    body.light .modal h2, body.light .cart-modal h2 { color:#111; }
+    body.light .modal-sub { color:#888; }
+    body.light .form-group input { background:#f0f0fa; border-color:#ccd; color:#111; }
+    body.light .form-group label { color:#666; }
+    body.light .auth-tabs { background:#e8e8f8; }
+    body.light .auth-tab { color:#888; }
+    body.light .auth-tab.active { background:#d8d8f0; color:#333; }
+    body.light .user-dropdown { background:#fafafe; border-color:#dde; }
+    body.light .user-dropdown a { color:#555; }
+    body.light .user-btn { color:#333; background:rgba(124,106,255,0.1); border-color:rgba(124,106,255,0.2); }
+    body.light .profile-section, body.light .profile-header { background:#fff; border-color:#dde; }
+    body.light .profile-info h2 { color:#111; }
+    body.light .profile-info p { color:#888; }
+    body.light .owned-item-name { color:#111; }
+    body.light .owned-item-game { color:#888; }
+    body.light .settings-label { color:#333; }
+    body.light .toggle-slider { background:#bbb; }
+    body.light .user-card { background:#fff; border-color:#dde; }
+    body.light .user-card-name { color:#111; }
+    body.light .user-card-scripts { color:#888; }
+    body.light .admin-stat { background:#f0f0fa; border-color:#dde; }
+    body.light .admin-table-wrap { border-color:#dde; background:#fff; }
+    body.light .admin-table thead tr { background:#eeeeff; }
+    body.light .admin-table th { color:#888; }
+    body.light .admin-row td { color:#333; }
+    body.light .admin-row:hover { background:rgba(124,106,255,0.04); }
+    body.light .notif-msg { color:#666; }
+    body.light .notif-item.unread .notif-msg { color:#111; }
+    body.light .notif-dot { background:#5546e0; }
+    body.light .bio-text { color:#555; }
+    body.light .bio-placeholder { color:#bbb; }
+    body.light .sft { border-color:#ccd; color:#888; }
+    body.light .sft.active { color:#5546e0; background:rgba(124,106,255,0.1); }
+    body.light .script-search-input, body.light .community-search-input { background:#f0f0fa; border-color:#ccd; color:#222; }
+    body.light .script-box { background:#f0f0fa; border-color:#ccd; }
+    body.light .script-box code { color:#1a7a3a; }
+    body.light .howto-box { background:#f0f0fa; border-color:#ccd; }
+    body.light .howto-box h3 { color:#5546e0; }
+    body.light .howto-box ol { color:#555; }
+    body.light .btn-logout { background:rgba(255,80,80,0.07); border-color:rgba(255,80,80,0.2); }
+    body.light .btn-modal-close { color:#888; }
+    body.light .hero h1 { color:#111; }
+    body.light .hero p { color:#777; }
+    body.light .hero-tag { background:rgba(124,106,255,0.1); color:#5546e0; }
+    body.light .lb-table-wrap { background:#fff; border-color:#dde; }
+    body.light .lb-table thead tr { background:#eeeeff; }
+    body.light .lb-table th { color:#888; }
+    body.light .lb-row td { color:#333; }
+    body.light .lb-tab { border-color:#ccd; color:#888; }
+    body.light .lb-tab.active { color:#5546e0; background:rgba(124,106,255,0.1); }
+    body.light .leaderboard-page h2 { color:#888; }
+    body.light .cart-total-label { color:#666; }
+    body.light .cart-total-price { color:#333; }
+    body.light .cart-item-name { color:#111; }
+    body.light .cart-item-game { color:#888; }
+    body.light .community-page h2 { color:#888; }
+    body.light .scripts-section h2 { color:#888; }
+    body.light .admin-note-input { background:#f0f0fa; border-color:#ccd; color:#333; }
+    body.light #site-announcement { background:linear-gradient(135deg,rgba(124,106,255,0.1),rgba(85,70,224,0.06)); border-bottom-color:rgba(124,106,255,0.2); }
+    body.light .no-owned { color:#888; }
+    body.light .copy-count-badge { color:#aaa; }
+    body.light .rate-label { color:#888; }
+    body.light .rating-count { color:#888; }
+
+    /* ── FEATURED SCRIPT CARD ── */
+    .featured-card {
+      background: linear-gradient(145deg, #16162a, #1c1c34);
+      border: 1px solid rgba(180,50,255,0.35);
+      border-radius: 22px;
+      padding: 48px 40px 40px;
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(180,50,255,0.12), 0 20px 60px rgba(0,0,0,0.5);
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .featured-card:hover { border-color: rgba(180,50,255,0.65); box-shadow: 0 0 80px rgba(180,50,255,0.22), 0 24px 70px rgba(0,0,0,0.5); }
+    .featured-icon {
+      width: 110px; height: 110px; border-radius: 26px;
+      background: linear-gradient(135deg, #b432ff, #5546e0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.2rem; font-weight: 900; color: #fff;
+      margin: 0 auto 28px;
+      box-shadow: 0 10px 40px rgba(180,50,255,0.45);
+    }
+    .featured-name { font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 6px; }
+    .featured-game { font-size: 0.9rem; color: #666; margin-bottom: 6px; }
+    .featured-version { font-size: 0.78rem; color: #444; margin-bottom: 20px; }
+    .featured-price {
+      font-size: 2.8rem; font-weight: 900; color: #cc88ff;
+      text-shadow: 0 0 30px rgba(180,50,255,0.4);
+      margin-bottom: 6px;
+    }
+    .featured-price-label { font-size: 0.8rem; color: #555; margin-bottom: 28px; }
+    .btn-paypal {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 16px;
+      background: #0070ba;
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 20px rgba(0,112,186,0.4);
+      margin-bottom: 10px;
+    }
+    .btn-paypal:hover { background: #005ea6; transform: translateY(-2px); }
+    .btn-paid {
+      width: 100%; padding: 13px;
+      background: rgba(100,220,120,0.12); border: 1px solid rgba(100,220,120,0.3);
+      color: #64dc78; border-radius: 12px;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      transition: background 0.2s; margin-bottom: 10px;
+    }
+    .btn-paid:hover { background: rgba(100,220,120,0.22); }
+    .featured-owned-btn {
+      display: block; width: 100%; padding: 16px;
+      background: linear-gradient(135deg, #7c6aff, #5546e0);
+      color: #fff; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(124,106,255,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-bottom: 10px;
+    }
+    .featured-owned-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,106,255,0.5); }
+    body.light .featured-card { background: #fff; border-color: rgba(180,50,255,0.2); }
+    body.light .featured-name { color: #111; }
+
+    /* ── CHAT ── */
+    .chat-page { max-width: 700px; margin: 50px auto; padding: 0 20px 80px; position: relative; z-index: 1; }
+    .chat-page h2 { text-align: center; font-size: 1.1rem; color: #555; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
+    .chat-box { background: #16162a; border: 1px solid #2a2a4a; border-radius: 14px; overflow: hidden; }
+    .chat-messages { height: 420px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { display: flex; gap: 10px; align-items: flex-start; }
+    .chat-msg-right { flex-direction: row-reverse; }
+    .chat-bubble { background: #1e1e38; border: 1px solid #2e2e50; border-radius: 12px; padding: 8px 14px; max-width: 72%; }
+    .chat-bubble-own { background: rgba(124,106,255,0.15); border-color: rgba(124,106,255,0.35); }
+    .chat-bubble-name { font-size: 0.72rem; color: #7c6aff; font-weight: 700; margin-bottom: 3px; }
+    .chat-bubble-text { font-size: 0.88rem; color: #e0e0e0; line-height: 1.5; word-break: break-word; }
+    .chat-bubble-time { font-size: 0.66rem; color: #444; margin-top: 3px; }
+    .chat-input-row { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #2a2a4a; }
+    .chat-input { flex: 1; background: #0f0f1a; border: 1px solid #2e2e50; border-radius: 9px; padding: 10px 14px; color: #e0e0e0; font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: inherit; }
+    .chat-input:focus { border-color: #7c6aff; }
+    .chat-send-btn { background: linear-gradient(135deg, #7c6aff, #5546e0); color: #fff; border: none; border-radius: 9px; padding: 10px 18px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s, transform 0.15s; }
+    .chat-send-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .chat-login-prompt { text-align: center; padding: 26px; color: #555; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 10px; border-top: 1px solid #2a2a4a; }
+    .chat-empty { color: #444; text-align: center; padding: 50px 20px; font-size: 0.88rem; }
+    body.light .chat-box { background: #fff; border-color: #dde; }
+    body.light .chat-bubble { background: #f0f0fa; border-color: #dde; }
+    body.light .chat-bubble-own { background: rgba(124,106,255,0.1); border-color: rgba(124,106,255,0.2); }
+    body.light .chat-bubble-text { color: #222; }
+    body.light .chat-input { background: #f0f0fa; border-color: #ccd; color: #111; }
+    body.light .chat-input-row { border-top-color: #dde; }
+    body.light .chat-login-prompt { border-top-color: #dde; color: #888; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav {
+        padding: 0 12px;
+        height: auto;
+        min-height: 56px;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+      nav ul {
+        gap: 2px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        flex: 1;
+      }
+      nav ul li a {
+        font-size: 0.78rem;
+        padding: 5px 8px;
+      }
+      nav .logo img { height: 30px; }
+      .btn-login-nav { padding: 6px 12px; font-size: 0.8rem; }
+      .user-btn { padding: 5px 8px; font-size: 0.8rem; gap: 5px; }
+      .user-dropdown { right: 0; min-width: 120px; }
+      .notif-btn { font-size: 1rem; }
+      .cart-nav-btn { padding: 5px 8px; font-size: 0.8rem; }
+
+      .hero { padding: 30px 16px; min-height: calc(100vh - 100px); }
+      .hero h1 { font-size: 2.2rem; }
+      .hero p { font-size: 0.95rem; }
+      .social-buttons { flex-direction: column; align-items: center; gap: 12px; }
+      .btn-yt, .btn-dc { padding: 13px 24px; font-size: 0.95rem; width: 100%; max-width: 300px; justify-content: center; }
+
+      .scripts-section { padding: 30px 14px 60px; }
+      .scripts-section h2 { margin-bottom: 20px; }
+      .scripts-toolbar { flex-direction: column; align-items: stretch; }
+      .script-filter-tabs { flex-wrap: wrap; }
+      .scripts-grid { grid-template-columns: 1fr; gap: 14px; }
+
+      .profile-page { margin: 20px auto; padding: 0 12px; }
+      .profile-header { flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px 16px; }
+      .admin-page { padding: 20px 12px 50px; }
+      .admin-stats { gap: 8px; }
+      .admin-stat { min-width: 80px; padding: 10px 14px; }
+
+      .community-page { margin: 20px auto; padding: 0 12px; }
+      .leaderboard-page { margin: 20px auto; padding: 0 12px 60px; }
+      .chat-page { margin: 20px auto; padding: 0 12px 60px; }
+      .chat-messages { height: 320px; }
+
+      .modal { padding: 24px 18px; border-radius: 14px; }
+      .cart-modal { padding: 22px 16px; }
+      .ban-title { font-size: 2rem; }
+
+      .hero-tag { font-size: 0.68rem; }
+
+      #scroll-top-btn { bottom: 16px; right: 14px; width: 38px; height: 38px; font-size: 1rem; }
+
+      .profile-section { padding: 16px 14px; }
+      .settings-row { flex-wrap: wrap; gap: 10px; }
+      .color-swatches { margin-top: 4px; }
+
+      .lb-tabs { flex-wrap: wrap; gap: 6px; }
+      .lb-table th, .lb-row td { padding: 10px 10px; }
+
+      .user-card { padding: 14px 12px; gap: 10px; }
+      .modal-buttons { flex-direction: column; }
+      .btn-get, .btn-how { width: 100%; }
+
+      .buy-price-display .price { font-size: 1.8rem; }
+
+      footer { padding: 20px 16px 16px; }
+    }
+
+    @media (max-width: 600px) {
+      .nav-label-hide { display: none; }
+      .nav-label-icon { display: inline !important; }
+    }
+
+    @media (max-width: 480px) {
+      nav ul li a { font-size: 0.72rem; padding: 4px 6px; }
+      .hero h1 { font-size: 1.8rem; }
+      .hero p { font-size: 0.88rem; }
+      .admin-table th, .admin-row td { padding: 8px 8px; font-size: 0.75rem; }
+      .admin-btn { padding: 3px 7px; font-size: 0.68rem; }
+      .profile-header { padding: 16px 12px; }
+      .profile-info h2 { font-size: 1.1rem; }
+      .scripts-section { padding: 20px 10px 50px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ANNOUNCEMENT BANNER -->
+  <div id="site-announcement" style="display:none;">
+    <span id="ann-text"></span>
+    <button class="ann-close" onclick="dismissAnnouncement()" title="Dismiss">✕</button>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo"><img src="LUABRO.png" alt="LuaBro Scripts"></div>
+    <ul>
+      <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+      <li><a href="#" class="nav-link" data-page="scripts">Script</a></li>
+      <li><a href="#" class="nav-link" data-page="community">Community</a></li>
+      <li><a href="#" class="nav-link" data-page="leaderboard">Leaderboard</a></li>
+      <li><a href="#" class="nav-link" data-page="chat"><span class="nav-label-hide">Chat</span><span class="nav-label-icon" style="display:none;">💬</span></a></li>
+      <li><a href="https://discord.gg/MC2XQQXcnF" target="_blank"><span class="nav-label-hide">Discord</span><span class="nav-label-icon" style="display:none;">💬</span></a></li>
+      <li><a href="https://www.youtube.com/@LuaBro" target="_blank"><span class="nav-label-hide">YouTube</span><span class="nav-label-icon" style="display:none;">▶</span></a></li>
+      <li id="nav-cart"></li>
+      <li id="nav-theme"></li>
+      <li id="nav-notif"></li>
+      <li id="nav-auth"></li>
+    </ul>
+  </nav>
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-tag">Private Beta Access</div>
+      <h1>Welcome to <span>SkiHook</span></h1>
+      <p>The private beta for SkiHook — a premium Rivals hook made by Kyrylo. Invite-only access required.</p>
+      <div class="social-buttons">
+        <a href="https://www.youtube.com/@LuaBro" target="_blank" class="btn-yt">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+          Subscribe on YouTube
+        </a>
+        <a href="https://discord.gg/MC2XQQXcnF" target="_blank" class="btn-dc">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3a.1.1 0 0 0-.1 0 13.6 13.6 0 0 0-.6 1.3 18.1 18.1 0 0 0-5.4 0A13 13 0 0 0 8.7 3a.1.1 0 0 0-.1 0 19.5 19.5 0 0 0-4.9 1.4A20.7 20.7 0 0 0 .2 17.7a19.7 19.7 0 0 0 6 3 .1.1 0 0 0 .1 0 14 14 0 0 0 1.2-2 .1.1 0 0 0 0-.1 12.9 12.9 0 0 1-1.9-.9.1.1 0 0 1 0-.1l.4-.3a.1.1 0 0 1 .1 0 14 14 0 0 0 11.9 0 .1.1 0 0 1 .1 0l.4.3a.1.1 0 0 1 0 .1 12.6 12.6 0 0 1-1.9.9.1.1 0 0 0 0 .1 15.7 15.7 0 0 0 1.2 2 .1.1 0 0 0 .1 0 19.6 19.6 0 0 0 6-3A20.6 20.6 0 0 0 20.3 4.4zM8 15.1c-1.2 0-2.1-1.1-2.1-2.4S6.9 10.3 8 10.3s2.1 1.1 2.1 2.4S9.2 15.1 8 15.1zm8 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4z"/></svg>
+          Join the Discord
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS PAGE -->
+  <div class="page" id="page-scripts">
+    <div class="scripts-section">
+      <h2>Script</h2>
+      <div class="scripts-grid" id="scripts-grid"></div>
+    </div>
+  </div>
+
+  <!-- COMMUNITY PAGE -->
+  <div class="page" id="page-community">
+    <div class="community-page">
+      <h2>Community</h2>
+      <div class="community-search-wrap">
+        <input type="text" id="community-search" class="community-search-input" placeholder="🔍 Search users..." oninput="renderCommunity()">
+      </div>
+      <div id="community-list"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page" id="page-profile">
+    <div class="profile-page" id="profile-content"></div>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div class="page" id="page-admin">
+    <div class="admin-page" id="admin-content"></div>
+  </div>
+
+  <!-- LEADERBOARD PAGE -->
+  <div class="page" id="page-leaderboard">
+    <div class="leaderboard-page">
+      <h2>Leaderboard</h2>
+      <div class="lb-tabs">
+        <button class="lb-tab active" onclick="setLbTab('purchases',this)">🏆 Most Scripts</button>
+        <button class="lb-tab" onclick="setLbTab('friends',this)">🤝 Most Friends</button>
+        <button class="lb-tab" onclick="setLbTab('views',this)">👁 Most Viewed</button>
+      </div>
+      <div id="lb-content"></div>
+    </div>
+  </div>
+
+  <!-- CHAT PAGE -->
+  <div class="page" id="page-chat">
+    <div class="chat-page">
+      <h2>Community Chat</h2>
+      <div class="chat-box">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div id="chat-input-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN OVERLAY -->
+  <div class="overlay" id="login-overlay" onclick="if(getCurrentUser())closeOnOverlay(event,'login-overlay')">
+    <div class="modal">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Login form -->
+      <div id="form-login">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="login-username" placeholder="Your username" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password"/>
+        </div>
+        <div class="form-error" id="login-error"></div>
+        <button class="btn-auth" onclick="doLogin()">Login</button>
+      </div>
+
+      <!-- Register form -->
+      <div id="form-register" style="display:none">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="reg-username" placeholder="Choose a username" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="Choose a password"/>
+        </div>
+        <div class="form-group">
+          <label>Invite Code</label>
+          <input type="text" id="reg-invite" placeholder="LUABRO-XXXX-XXXX" style="text-transform:uppercase;" autocomplete="off"/>
+        </div>
+        <div class="form-error" id="register-error"></div>
+        <button class="btn-auth" onclick="doRegister()">Create Account</button>
+      </div>
+
+      <button class="btn-modal-close" onclick="closeOverlay('login-overlay')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- BUY OVERLAY -->
+  <div class="overlay" id="buy-overlay" onclick="closeOnOverlay(event,'buy-overlay')">
+    <div class="modal">
+      <h2 id="buy-title">Buy Script</h2>
+      <div class="modal-sub" id="buy-sub">Premium script</div>
+      <div class="buy-price-display">
+        <div class="price" id="buy-price-display">$0.00</div>
+        <div class="price-label">one-time purchase</div>
+      </div>
+      <div class="buy-info">
+        Purchase through our Discord server. After payment, click <strong style="color:#cc88ff">Complete Purchase</strong> below to unlock the script on your account.
+      </div>
+      <div class="buy-buttons">
+        <button class="btn-buy-confirm" id="buy-confirm-btn">Complete Purchase</button>
+        <a href="https://discord.gg/MC2XQQXcnF" target="_blank" class="btn-buy-discord">Go to Discord to Pay</a>
+      </div>
+      <button class="btn-modal-close" onclick="closeOverlay('buy-overlay')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- SCRIPT OVERLAY -->
+  <div class="overlay" id="script-overlay" onclick="closeOnOverlay(event,'script-overlay')">
+    <div class="modal">
+      <h2 id="modal-title">Script</h2>
+      <div class="modal-sub" id="modal-sub">Choose an option below</div>
+
+      <div class="modal-key-warning" id="key-warning">
+        &#9888; This script has a key system. You will need a key to use it.
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-get" onclick="showScriptCode()">Get Script</button>
+        <button class="btn-how" onclick="showHowTo()">How to Use</button>
+      </div>
+
+      <div class="script-box" id="script-box">
+        <code id="script-code"></code>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-copy" id="copy-btn" onclick="copyScript()" style="flex:1;margin-top:0;">Copy Loader</button>
+          <a id="script-dl-btn" href="#" download style="display:none;flex-shrink:0;padding:7px 14px;border-radius:6px;background:rgba(124,106,255,0.18);border:1px solid rgba(124,106,255,0.35);color:#a898ff;font-size:0.8rem;font-weight:700;text-decoration:none;transition:background 0.15s;">⬇ Download .lua</a>
+        </div>
+      </div>
+
+      <div class="howto-box" id="howto-box">
+        <h3>How to use this script</h3>
+        <ol>
+          <li>Get a Roblox executor (e.g. <span>Synapse X</span>, <span>KRNL</span>, <span>Fluxus</span>)</li>
+          <li>Open Roblox and join a game</li>
+          <li>Open your executor and paste the script</li>
+          <li>Click <span>Execute</span></li>
+        </ol>
+      </div>
+
+      <button class="btn-modal-close" onclick="closeOverlay('script-overlay')">Close</button>
+    </div>
+  </div>
+
+  <!-- VIEW PROFILE OVERLAY -->
+  <div class="overlay" id="view-profile-overlay" onclick="closeOnOverlay(event,'view-profile-overlay')">
+    <div class="modal" style="max-width:420px;">
+      <div id="view-profile-content"></div>
+      <button class="btn-modal-close" onclick="closeOverlay('view-profile-overlay')">Close</button>
+    </div>
+  </div>
+
+  <!-- BAN CONFIRM OVERLAY -->
+  <div class="overlay" id="ban-confirm-overlay" onclick="closeOnOverlay(event,'ban-confirm-overlay')">
+    <div class="modal" style="max-width:380px;">
+      <div style="font-size:2.5rem;margin-bottom:12px;">🔨</div>
+      <h2 style="color:#ff4444;">Ban User?</h2>
+      <div class="modal-sub" id="ban-confirm-sub">Are you sure you want to ban this user?</div>
+      <div style="background:rgba(255,40,40,0.08);border:1px solid rgba(255,40,40,0.2);border-radius:10px;padding:12px 16px;color:#ff6060;font-size:0.82rem;margin-bottom:22px;line-height:1.6;">
+        This will immediately lock their account and show them the ban screen. You can unban them anytime.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-buy-confirm" id="ban-confirm-btn" style="background:linear-gradient(135deg,#ff4444,#cc0000);">Yes, Ban This User</button>
+        <button class="btn-modal-close" style="margin-top:0;color:#aaa;" onclick="closeOverlay('ban-confirm-overlay')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFUND OVERLAY -->
+  <div class="overlay" id="refund-overlay" onclick="closeOnOverlay(event,'refund-overlay')">
+    <div class="modal">
+      <h2>💸 Request Refund</h2>
+      <div class="modal-sub" id="refund-sub">Script name</div>
+      <div style="background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.25);border-radius:12px;padding:16px;margin-bottom:20px;color:#ffb400;font-size:0.85rem;line-height:1.6;">
+        Your access will be removed immediately.<br>
+        To receive your money back, contact us on Discord with your username.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-buy-confirm" id="refund-confirm-btn" style="background:linear-gradient(135deg,#ffb400,#e07800);">Confirm Refund</button>
+        <a href="https://discord.gg/MC2XQQXcnF" target="_blank" class="btn-buy-discord">Contact on Discord</a>
+      </div>
+      <button class="btn-modal-close" onclick="closeOverlay('refund-overlay')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- CART OVERLAY -->
+  <div class="overlay" id="cart-overlay" onclick="closeOnOverlay(event,'cart-overlay')">
+    <div class="cart-modal">
+      <h2>🛒 Your Cart</h2>
+      <div class="cart-modal-sub">Review your scripts before purchasing</div>
+      <div id="cart-items-list"></div>
+      <div class="cart-total">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-price" id="cart-total">€0.00</span>
+      </div>
+      <button class="btn-checkout" id="checkout-btn" onclick="checkoutCart()">Complete Purchase</button>
+      <a href="https://discord.gg/MC2XQQXcnF" target="_blank" class="btn-buy-discord">Go to Discord to Pay</a>
+      <br>
+      <button class="btn-modal-close" onclick="closeOverlay('cart-overlay')">Close</button>
+    </div>
+  </div>
+
+  <!-- BAN SCREEN -->
+  <div id="ban-screen">
+    <div class="ban-icon">⛔</div>
+    <div class="ban-title">YOU HAVE BEEN BANNED</div>
+    <div class="ban-msg">
+      Your account has been permanently banned from LuaBro Scripts.<br>
+      If you believe this is a mistake, contact us on Discord.
+    </div>
+    <a href="https://discord.gg/MC2XQQXcnF" target="_blank" class="ban-discord">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3a.1.1 0 0 0-.1 0 13.6 13.6 0 0 0-.6 1.3 18.1 18.1 0 0 0-5.4 0A13 13 0 0 0 8.7 3a.1.1 0 0 0-.1 0 19.5 19.5 0 0 0-4.9 1.4A20.7 20.7 0 0 0 .2 17.7a19.7 19.7 0 0 0 6 3 .1.1 0 0 0 .1 0 14 14 0 0 0 1.2-2 .1.1 0 0 0 0-.1 12.9 12.9 0 0 1-1.9-.9.1.1 0 0 1 0-.1l.4-.3a.1.1 0 0 1 .1 0 14 14 0 0 0 11.9 0 .1.1 0 0 1 .1 0l.4.3a.1.1 0 0 1 0 .1 12.6 12.6 0 0 1-1.9.9.1.1 0 0 0 0 .1 15.7 15.7 0 0 0 1.2 2 .1.1 0 0 0 .1 0 19.6 19.6 0 0 0 6-3A20.6 20.6 0 0 0 20.3 4.4zM8 15.1c-1.2 0-2.1-1.1-2.1-2.4S6.9 10.3 8 10.3s2.1 1.1 2.1 2.4S9.2 15.1 8 15.1zm8 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4z"/></svg>
+      Appeal on Discord
+    </a>
+    <button onclick="switchAccount()" style="margin-top:12px;background:none;border:1px solid #333;color:#555;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:0.8rem;transition:color 0.2s,border-color 0.2s;" onmouseover="this.style.color='#aaa';this.style.borderColor='#555';" onmouseout="this.style.color='#555';this.style.borderColor='#333';">Switch Account</button>
+  </div>
+
+  <!-- NOTIFICATIONS PANEL -->
+  <div class="overlay" id="notif-overlay" onclick="closeOnOverlay(event,'notif-overlay')">
+    <div class="modal" style="max-width:400px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 style="margin:0;">🔔 Notifications</h2>
+        <button onclick="clearNotifs()" style="background:none;border:none;color:#555;font-size:0.78rem;cursor:pointer;">Clear all</button>
+      </div>
+      <div id="notif-list"></div>
+      <button class="btn-modal-close" onclick="closeOverlay('notif-overlay')">Close</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer style="text-align:center;padding:28px 20px 20px;color:#383856;font-size:0.78rem;letter-spacing:0.5px;position:relative;z-index:1;">
+    Made by <span style="color:#7c6aff;font-weight:700;">Kyrylo</span> &middot; SkiHook [beta]
+  </footer>
+
+  <!-- SCROLL TO TOP -->
+  <button id="scroll-top-btn" onclick="scrollToTop()" title="Back to top">↑</button>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── SAFE STORAGE (works even when localStorage/sessionStorage are blocked) ──
+    var _lsMem = {}, _ssMem = {};
+    var _ls = (function() {
+      try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return localStorage; }
+      catch(e) { return { getItem:function(k){return _lsMem[k]||null;}, setItem:function(k,v){_lsMem[k]=v;}, removeItem:function(k){delete _lsMem[k];} }; }
+    })();
+    var _ss = (function() {
+      try { sessionStorage.setItem('__t','1'); sessionStorage.removeItem('__t'); return sessionStorage; }
+      catch(e) { return { getItem:function(k){return _ssMem[k]||null;}, setItem:function(k,v){_ssMem[k]=v;}, removeItem:function(k){delete _ssMem[k];} }; }
+    })();
+
+    // ── FIREBASE CROSS-DEVICE SYNC ────────────────────────────────────────────
+    // Setup (one-time):
+    //  1. Go to console.firebase.google.com → Add project (any name)
+    //  2. Build → Realtime Database → Create database → Start in test mode → Enable
+    //  3. Copy the URL shown (looks like: https://your-app-default-rtdb.firebaseio.com)
+    //  4. Paste it below (replace the empty string)
+    var FB_URL = 'https://skihook-14f14-default-rtdb.firebaseio.com';
+    var _fbOn  = !!FB_URL;
+
+    // Convert Firebase objects back to arrays (Firebase serialises [] as {0:…,1:…})
+    function _fbArr(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      return Object.keys(val).sort(function(a,b){ return +a - +b; }).map(function(k){ return val[k]; });
+    }
+
+    function _fbGet(path) {
+      if (!_fbOn) return Promise.resolve(null);
+      var url = FB_URL + '/skihook' + (path ? '/' + path : '') + '.json';
+      return fetch(url).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+    }
+
+    function _fbSet(path, val) {
+      if (!_fbOn) return;
+      var url = FB_URL + '/skihook' + (path ? '/' + path : '') + '.json';
+      fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(val) }).catch(function(){});
+    }
+
+    function initFirebase() {
+      if (!_fbOn) return;
+
+      // Load initial snapshot
+      _fbGet('').then(function(data) {
+        if (!data) return;
+        if (data.users)       _ls.setItem('lb_users',        JSON.stringify(_fbArr(data.users)));
+        if (data.usedInvites) _ls.setItem('lb_used_invites', JSON.stringify(_fbArr(data.usedInvites)));
+        if (data.chat)        _ls.setItem('lb_chat',         JSON.stringify(_fbArr(data.chat)));
+        if (data.announcement !== undefined && data.announcement) {
+          _ls.setItem('lb_announcement', JSON.stringify(data.announcement));
+        }
+        renderAll();
+        renderAnnouncement();
+      });
+
+      // Poll chat every 3 s — near-real-time messaging across devices
+      setInterval(function() {
+        _fbGet('chat').then(function(raw) {
+          var msgs   = _fbArr(raw);
+          var remote = JSON.stringify(msgs);
+          if (remote === _ls.getItem('lb_chat')) return;
+          _ls.setItem('lb_chat', remote);
+          var active = document.querySelector('.page.active');
+          if (active && active.id === 'page-chat') renderChat();
+        });
+      }, 3000);
+
+      // Poll users every 12 s — keeps community / leaderboard current
+      setInterval(function() {
+        _fbGet('users').then(function(raw) {
+          var users  = _fbArr(raw);
+          var remote = JSON.stringify(users);
+          if (!users.length || remote === _ls.getItem('lb_users')) return;
+          _ls.setItem('lb_users', remote);
+          renderAll();
+        });
+      }, 12000);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── INVITE CODES ──
+    var INVITE_CODES = [
+      'LUABRO-K7X2-M9QP',
+      'LUABRO-R3NF-8WZT',
+      'LUABRO-VQ6J-4YKD',
+      'LUABRO-H5BG-LXCE',
+      'LUABRO-2TPS-N7RA',
+      'LUABRO-WQJM-6F3K',
+      'LUABRO-YD4C-9HSE',
+      'LUABRO-8ZBP-XTQM',
+      'LUABRO-L1NK-5VMF',
+      'LUABRO-AJ7R-3GWD'
+    ];
+    function getUsedInvites()  { return JSON.parse(_ls.getItem('lb_used_invites') || '[]'); }
+    function markInviteUsed(c) {
+      var u = getUsedInvites(); u.push(c);
+      _ls.setItem('lb_used_invites', JSON.stringify(u));
+      _fbSet('usedInvites', u);
+    }
+
+    // ── DATA ──
+    var SCRIPTS = [
+      {
+        id: 'skihook',
+        name: 'SkiHook [beta]',
+        game: 'Rivals',
+        premium: true,
+        price: 6.99,
+        hasKey: true,
+        file: 'skihook.lua',
+        version: 'v0.1b',
+        updated: 'Jun 2025',
+        code: 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Skirilo15/SkiHook/refs/heads/main/SkiHook.lua"))()'
+      }
+    ];
+
+    // ── FRIENDS & PRIVACY ──
+    function getFriends() {
+      var u = getCurrentUser(); return u ? (u.friends || []) : [];
+    }
+
+    function isFriend(username) { return getFriends().indexOf(username) !== -1; }
+
+    function toggleFriend(username) {
+      var users = getUsers();
+      var me = users.find(function(u){ return u.username === _ls.getItem('lb_current'); });
+      if (!me) return;
+      if (username === me.username) return;
+      if (!me.friends) me.friends = [];
+      var idx = me.friends.indexOf(username);
+      if (idx === -1) {
+        me.friends.push(username);
+        pushNotif(username, me.username + ' added you as a friend!');
+      } else {
+        me.friends.splice(idx, 1);
+      }
+      saveUsers(users);
+      renderCommunity();
+      renderProfile();
+    }
+
+    function isPrivate(username) {
+      var u = getUsers().find(function(x){ return x.username === username; });
+      return u ? !!u.private : false;
+    }
+
+    function togglePrivacy() {
+      var users = getUsers();
+      var me = users.find(function(u){ return u.username === _ls.getItem('lb_current'); });
+      if (!me) return;
+      me.private = !me.private;
+      saveUsers(users);
+    }
+
+    // ── COMMUNITY ──
+    function renderCommunity() {
+      var me    = getCurrentUser();
+      var query = (document.getElementById('community-search') ? document.getElementById('community-search').value.toLowerCase().trim() : '');
+      var all   = getUsers().filter(function(u){
+        if (me && u.username === me.username) return false;
+        if (query && u.username.toLowerCase().indexOf(query) === -1) return false;
+        return true;
+      });
+      var el    = document.getElementById('community-list');
+
+      if (all.length === 0) {
+        el.innerHTML = '<div class="community-empty">' + (query ? 'No users match &ldquo;' + escHtml(query) + '&rdquo;.' : 'No other users yet. Share your site so others can register!') + '</div>';
+        return;
+      }
+
+      el.innerHTML = all.map(function(u) {
+        var friend   = me && isFriend(u.username);
+        var priv     = isPrivate(u.username);
+        var owned    = (u.purchases || []).map(function(id){
+          var s = SCRIPTS.find(function(x){ return x.id === id; });
+          return s ? s.name : null;
+        }).filter(Boolean);
+
+        var scriptsText = priv
+          ? '<span style="color:#555">🔒 Private</span>'
+          : (owned.length === 0
+              ? 'No premium scripts'
+              : 'Owns: <span>' + owned.join(', ') + '</span>');
+
+        var safeUC = escHtml(u.username);
+        var friendBtn = !me ? '' :
+          '<button class="btn-friend ' + (friend ? 'btn-friend-remove' : 'btn-friend-add') + '" ' +
+            'onclick="toggleFriend(\'' + safeUC + '\')">' +
+            (friend ? '✓ Friends' : '+ Add Friend') +
+          '</button>';
+
+        return '<div class="user-card">' +
+          '<div class="user-card-avatar" style="cursor:pointer;overflow:hidden;" onclick="viewProfile(\'' + safeUC + '\')">' + avatarHtml(u.username, 44) + '</div>' +
+          '<div class="user-card-info" style="cursor:pointer;" onclick="viewProfile(\'' + safeUC + '\')">' +
+            '<div class="user-card-name">' + safeUC +
+              roleTag(u.username) +
+              (u.banned ? ' <span style="color:#ff4444;font-size:0.7rem;font-weight:700;background:rgba(255,40,40,0.1);border:1px solid rgba(255,40,40,0.25);padding:2px 7px;border-radius:20px;">Banned</span>' : '') +
+              (friend ? ' <span style="color:#64dc78;font-size:0.7rem;font-weight:700;background:rgba(100,220,120,0.12);border:1px solid rgba(100,220,120,0.25);padding:2px 7px;border-radius:20px;">Friend</span>' : '') +
+            '</div>' +
+            '<div class="user-card-scripts">' + scriptsText + '</div>' +
+            '<div style="margin-top:3px;">' + onlineHtml(u.username) + '</div>' +
+          '</div>' +
+          friendBtn +
+        '</div>';
+      }).join('');
+    }
+
+    // ── ADMIN PANEL ──
+    function renderAdmin() {
+      var me = getCurrentUser();
+      var el = document.getElementById('admin-content');
+      if (!me || !canAccessAdmin(me.username)) {
+        el.innerHTML = '<div style="color:#ff4444;padding:40px;text-align:center;">Access denied.</div>';
+        return;
+      }
+
+      var users       = getUsers();
+      var total       = users.length;
+      var banned      = users.filter(function(u){ return u.banned; }).length;
+      var admins      = users.filter(function(u){ return u.role === 'admin'; }).length;
+      var premiumSales = users.reduce(function(acc, u){ return acc + (u.purchases || []).length; }, 0);
+      var amOwner     = isOwner(me.username);
+
+      function userRow(u) {
+        var days = u.joinedAt ? Math.floor((Date.now() - u.joinedAt) / 86400000) : null;
+        var purchases = (u.purchases || []).map(function(id){
+          var s = SCRIPTS.find(function(x){ return x.id === id; });
+          return s ? s.name : id;
+        });
+        var isSelf   = u.username === me.username;
+        var uIsOwner = isOwner(u.username);
+        var uIsAdmin = isAdmin(u.username);
+        var safeUN   = escHtml(u.username);
+
+        var actionBtns = '';
+        if (!uIsOwner && !isSelf) {
+          actionBtns +=
+            (u.banned
+              ? '<button class="admin-btn admin-btn-green" onclick="adminUnban(\'' + safeUN + '\')">Unban</button>'
+              : '<button class="admin-btn admin-btn-red" onclick="banUser(\'' + safeUN + '\')">Ban</button>');
+          if (purchases.length) {
+            actionBtns += ' <button class="admin-btn admin-btn-grey" onclick="adminRevokeAll(\'' + safeUN + '\')">Revoke All</button>';
+          }
+          if (amOwner) {
+            actionBtns += uIsAdmin
+              ? ' <button class="admin-btn admin-btn-grey" onclick="revokeAdmin(\'' + safeUN + '\')">Revoke Admin</button>'
+              : ' <button class="admin-btn admin-btn-blue" onclick="grantAdmin(\'' + safeUN + '\')">Grant Admin</button>';
+            SCRIPTS.filter(function(s){ return s.premium; }).forEach(function(s) {
+              if ((u.purchases || []).indexOf(s.id) === -1) {
+                actionBtns += ' <button class="admin-btn admin-btn-green" onclick="adminGrantScript(\'' + safeUN + '\',\'' + s.id + '\')">Grant ' + s.name + '</button>';
+              }
+            });
+          }
+        } else {
+          actionBtns = '<span style="color:#555;font-size:0.78rem;">—</span>';
+        }
+        var noteHtml = amOwner
+          ? '<div style="margin-top:6px;">' +
+              (u.adminNote ? '<div class="admin-note-tag" style="margin-bottom:4px;">📝 ' + escHtml(u.adminNote) + '</div>' : '') +
+              '<textarea id="note-input-' + safeUN + '" class="admin-note-input" placeholder="Add note..." rows="1">' + escHtml(u.adminNote || '') + '</textarea>' +
+              '<button class="admin-btn admin-btn-grey" style="margin-top:4px;" onclick="saveUserNote(\'' + safeUN + '\')">Save Note</button>' +
+            '</div>'
+          : (u.adminNote ? '<div class="admin-note-tag" style="margin-top:4px;">📝 ' + escHtml(u.adminNote) + '</div>' : '');
+
+        return '<tr class="admin-row' + (u.banned ? ' admin-row-banned' : '') + '">' +
+          '<td>' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<div style="width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;">' + avatarHtml(u.username, 30) + '</div>' +
+              '<div>' +
+                '<div style="color:#fff;font-size:0.88rem;font-weight:700;">' + safeUN + roleTag(u.username) + '</div>' +
+                '<div style="color:#555;font-size:0.73rem;">' + escHtml(u.email) + '</div>' +
+                noteHtml +
+              '</div>' +
+            '</div>' +
+          '</td>' +
+          '<td style="color:#aaa;font-size:0.82rem;">' + (days !== null ? days + 'd' : '—') + '</td>' +
+          '<td style="font-size:0.8rem;">' +
+            (purchases.length ? '<span style="color:#cc88ff;">' + purchases.join(', ') + '</span>' : '<span style="color:#444;">—</span>') +
+          '</td>' +
+          '<td>' +
+            (u.banned
+              ? '<span class="admin-badge admin-badge-banned">Banned</span>'
+              : (uIsOwner ? '<span class="admin-badge" style="background:rgba(255,180,0,0.12);color:#ffb400;border:1px solid rgba(255,180,0,0.3);">Owner</span>'
+              : (uIsAdmin ? '<span class="admin-badge" style="background:rgba(100,180,255,0.12);color:#6ab4ff;border:1px solid rgba(100,180,255,0.3);">Admin</span>'
+              : '<span class="admin-badge admin-badge-active">Active</span>'))) +
+          '</td>' +
+          '<td>' + actionBtns + '</td>' +
+        '</tr>';
+      }
+
+      var currentAnn = getAnnouncement();
+      var annSection = amOwner
+        ? '<div class="profile-section" style="margin-bottom:24px;">' +
+            '<h3 style="color:#a898ff;font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">📢 Site Announcement</h3>' +
+            (currentAnn ? '<div style="background:rgba(124,106,255,0.1);border:1px solid rgba(124,106,255,0.25);border-radius:8px;padding:10px 14px;color:#a898ff;font-size:0.85rem;margin-bottom:10px;">' + escHtml(currentAnn.text) + '</div>' : '<div style="color:#555;font-size:0.82rem;margin-bottom:10px;">No active announcement.</div>') +
+            '<textarea id="ann-input-admin" class="admin-note-input" style="min-height:60px;" placeholder="Write an announcement visible to all users...">' + escHtml(currentAnn ? currentAnn.text : '') + '</textarea>' +
+            '<div style="display:flex;gap:8px;margin-top:8px;">' +
+              '<button class="admin-btn admin-btn-blue" onclick="saveAnnouncement(document.getElementById(\'ann-input-admin\').value)">Post Announcement</button>' +
+              '<button class="admin-btn admin-btn-red" onclick="saveAnnouncement(\'\')">Clear</button>' +
+            '</div>' +
+          '</div>'
+        : '';
+
+      var users2 = getUsers();
+      var notifOptions = '<option value="all">📢 All Users</option>' +
+        users2.filter(function(u){ return u.username !== me.username && !u.banned; })
+              .map(function(u){ return '<option value="' + escHtml(u.username) + '">' + escHtml(u.username) + '</option>'; }).join('');
+      var notifSection = '<div class="profile-section" style="margin-bottom:24px;">' +
+          '<h3 style="color:#a898ff;font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">📨 Send Notification</h3>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' +
+            '<select id="notif-target-select" style="background:#1a1a2e;color:#e0e0f0;border:1px solid rgba(124,106,255,0.3);border-radius:8px;padding:7px 12px;font-size:0.85rem;flex:1;min-width:140px;">' + notifOptions + '</select>' +
+          '</div>' +
+          '<textarea id="notif-msg-input" class="admin-note-input" style="min-height:60px;" placeholder="Type your notification message..."></textarea>' +
+          '<div style="margin-top:8px;">' +
+            '<button class="admin-btn admin-btn-blue" onclick="adminSendNotif()">Send Notification</button>' +
+          '</div>' +
+        '</div>';
+
+      var usedInvites = getUsedInvites();
+      var inviteSection = '<div class="profile-section" style="margin-bottom:24px;">' +
+          '<h3 style="color:#a898ff;font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">🎟 Invite Codes</h3>' +
+          '<div style="display:flex;flex-direction:column;gap:7px;">' +
+          INVITE_CODES.map(function(code) {
+            var used = usedInvites.indexOf(code) !== -1;
+            return '<div style="display:flex;align-items:center;justify-content:space-between;background:#0e0e1c;border:1px solid ' + (used ? 'rgba(255,40,40,0.2)' : 'rgba(100,220,120,0.2)') + ';border-radius:8px;padding:8px 14px;">' +
+              '<code style="font-family:Consolas,monospace;font-size:0.82rem;color:' + (used ? '#ff6060' : '#a898ff') + ';">' + code + '</code>' +
+              '<span style="font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:20px;' +
+                (used
+                  ? 'background:rgba(255,40,40,0.12);color:#ff4444;border:1px solid rgba(255,40,40,0.25);'
+                  : 'background:rgba(100,220,120,0.1);color:#64dc78;border:1px solid rgba(100,220,120,0.25);') +
+              '">' + (used ? '✗ Used' : '✓ Available') + '</span>' +
+              (used && amOwner
+                ? ' <button class="admin-btn admin-btn-grey" style="margin-left:8px;" onclick="resetInvite(\'' + code + '\')">Reset</button>'
+                : '') +
+            '</div>';
+          }).join('') +
+          '</div>' +
+          '<div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<span style="color:#555;font-size:0.78rem;">' + usedInvites.length + ' / ' + INVITE_CODES.length + ' used</span>' +
+            (amOwner ? '<button class="admin-btn admin-btn-grey" onclick="resetAllInvites()">Reset All</button>' : '') +
+          '</div>' +
+        '</div>';
+
+      el.innerHTML =
+        annSection +
+        notifSection +
+        inviteSection +
+        '<div class="admin-header">' +
+          '<h2>⚙ Admin Panel</h2>' +
+          '<div class="admin-stats">' +
+            '<div class="admin-stat"><div class="admin-stat-num">' + total + '</div><div class="admin-stat-label">Total Users</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#ff4444;">' + banned + '</div><div class="admin-stat-label">Banned</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#6ab4ff;">' + admins + '</div><div class="admin-stat-label">Admins</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#cc88ff;">' + premiumSales + '</div><div class="admin-stat-label">Premium Owned</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-table-wrap">' +
+          '<table class="admin-table">' +
+            '<thead><tr>' +
+              '<th>User</th><th>Age</th><th>Scripts</th><th>Status</th><th>Actions</th>' +
+            '</tr></thead>' +
+            '<tbody>' + users.map(userRow).join('') + '</tbody>' +
+          '</table>' +
+        '</div>';
+    }
+
+    function grantAdmin(username) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { u.role = 'admin'; saveUsers(users); renderAdmin(); showToast(username + ' is now an Admin.'); pushNotif(username, '🛡 You have been granted Admin role!'); }
+    }
+
+    function revokeAdmin(username) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { delete u.role; saveUsers(users); renderAdmin(); showToast('Admin role removed from ' + username + '.'); pushNotif(username, 'Your Admin role has been removed.'); }
+    }
+
+    function adminUnban(username) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { u.banned = false; saveUsers(users); renderAdmin(); showToast(username + ' has been unbanned.'); }
+    }
+
+    function adminRevokeAll(username) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { u.purchases = []; saveUsers(users); renderAdmin(); showToast('All scripts revoked from ' + username + '.'); pushNotif(username, '⚠ All your premium scripts have been revoked by an admin.'); }
+    }
+
+    function adminGrantScript(username, scriptId) {
+      var me = getCurrentUser();
+      if (!me || !isOwner(me.username)) return;
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (!u) return;
+      if ((u.purchases || []).indexOf(scriptId) === -1) {
+        u.purchases.push(scriptId);
+        saveUsers(users);
+        var s = SCRIPTS.find(function(x){ return x.id === scriptId; });
+        renderAdmin();
+        showToast('Granted ' + (s ? s.name : scriptId) + ' to ' + username + '.');
+        pushNotif(username, '🎉 You have been granted access to ' + (s ? s.name : scriptId) + '!');
+      }
+    }
+
+    function adminSendNotif() {
+      var me = getCurrentUser();
+      if (!me || !canAccessAdmin(me.username)) return;
+      var targetEl = document.getElementById('notif-target-select');
+      var msgEl = document.getElementById('notif-msg-input');
+      if (!targetEl || !msgEl) return;
+      var target = targetEl.value;
+      var msg = msgEl.value.trim();
+      if (!msg) { showToast('Please enter a message.'); return; }
+      var users = getUsers();
+      if (target === 'all') {
+        var count = 0;
+        users.forEach(function(u) {
+          if (u.username !== me.username && !u.banned) { pushNotif(u.username, '📨 ' + msg); count++; }
+        });
+        showToast('Notification sent to ' + count + ' user(s).');
+      } else {
+        var targetUser = users.find(function(u){ return u.username === target; });
+        if (!targetUser) { showToast('User not found.'); return; }
+        pushNotif(target, '📨 ' + msg);
+        showToast('Notification sent to ' + escHtml(target) + '.');
+      }
+      msgEl.value = '';
+    }
+
+    // ── BAN CHECK ──
+    function checkBanStatus() {
+      var u = getCurrentUser();
+      var bannedFlag = _ls.getItem('lb_banned_flag');
+
+      // also re-check if flag is set (persists across logouts)
+      if (!u && bannedFlag) {
+        var flagUser = getUsers().find(function(x){ return x.username === bannedFlag; });
+        if (flagUser && flagUser.banned) { showBanScreen(); return; }
+        else { _ls.removeItem('lb_banned_flag'); }
+      }
+
+      if (u && u.banned) {
+        _ls.setItem('lb_banned_flag', u.username);
+        _ls.removeItem('lb_current');
+        showBanScreen();
+      }
+    }
+
+    function showBanScreen() {
+      document.getElementById('ban-screen').classList.add('show');
+      document.body.classList.add('is-banned');
+      // close all overlays so nothing is clickable behind
+      document.querySelectorAll('.overlay').forEach(function(o){ o.classList.remove('active'); });
+    }
+
+    function switchAccount() {
+      _ls.removeItem('lb_banned_flag');
+      _ls.removeItem('lb_current');
+      document.getElementById('ban-screen').classList.remove('show');
+      document.body.classList.remove('is-banned');
+      switchAuthTab('login');
+      openOverlay('login-overlay');
+    }
+
+    // ── OWNER ACTIONS ──
+    function banUser(username) {
+      var me = getCurrentUser();
+      if (!me || !canAccessAdmin(me.username)) return;
+      if (isOwner(username)) { showToast('Cannot ban the owner.'); return; }
+      if (username === me.username) { showToast('Cannot ban yourself.'); return; }
+      document.getElementById('ban-confirm-sub').textContent = 'Are you sure you want to ban "' + username + '"?';
+      document.getElementById('ban-confirm-btn').onclick = function() {
+        if (!canAccessAdmin((getCurrentUser() || {}).username)) return;
+        var users = getUsers();
+        var u = users.find(function(x){ return x.username === username; });
+        if (u && !isOwner(u.username)) {
+          u.banned = true;
+          saveUsers(users);
+          closeOverlay('ban-confirm-overlay');
+          closeOverlay('view-profile-overlay');
+          renderCommunity();
+          showToast(username + ' has been banned.');
+        }
+      };
+      closeOverlay('view-profile-overlay');
+      openOverlay('ban-confirm-overlay');
+    }
+
+    function unbanUser(username) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { u.banned = false; saveUsers(users); viewProfile(username); showToast(username + ' has been unbanned.'); }
+    }
+
+    function revokeScript(username, scriptId) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) {
+        u.purchases = (u.purchases || []).filter(function(id){ return id !== scriptId; });
+        saveUsers(users);
+        viewProfile(username);
+        var s = SCRIPTS.find(function(x){ return x.id === scriptId; });
+        showToast('Revoked ' + (s ? s.name : scriptId) + ' from ' + username + '.');
+      }
+    }
+
+    // ── VIEW PROFILE ──
+    function viewProfile(username) {
+      var u     = getUsers().find(function(x){ return x.username === username; });
+      if (!u) return;
+      trackProfileView(username);
+      var me    = getCurrentUser();
+      var priv  = isPrivate(username);
+      var owned = priv ? [] : (u.purchases || []).map(function(id){
+        return SCRIPTS.find(function(s){ return s.id === id; });
+      }).filter(Boolean);
+      var friend = me && isFriend(username);
+
+      var safeU = escHtml(u.username);
+      document.getElementById('view-profile-content').innerHTML =
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;">' +
+          '<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;">' + avatarHtml(u.username, 64) + '</div>' +
+          '<div style="text-align:center;">' +
+            '<div style="font-size:1.2rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;justify-content:center;">' +
+              safeU + roleTag(u.username) +
+            '</div>' +
+            (friend ? '<div style="color:#64dc78;font-size:0.78rem;margin-top:4px;">✓ Friends</div>' : '') +
+            (u.bio ? '<div style="color:#888;font-size:0.82rem;margin-top:6px;font-style:italic;max-width:260px;">"' + escHtml(u.bio) + '"</div>' : '') +
+            '<div style="display:flex;justify-content:center;">' + badgesHtml(u) + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">' +
+            (me && me.username !== username
+              ? '<button class="btn-friend ' + (friend ? 'btn-friend-remove' : 'btn-friend-add') + '" ' +
+                  'onclick="toggleFriend(\'' + safeU + '\');viewProfile(\'' + safeU + '\')">' +
+                  (friend ? 'Remove Friend' : '+ Add Friend') +
+                '</button>'
+              : '') +
+            (me && isOwner(me.username) && me.username !== username
+              ? (u.banned
+                  ? '<button class="btn-friend btn-friend-add" onclick="unbanUser(\'' + safeU + '\')">✓ Unban</button>'
+                  : '<button class="btn-friend btn-friend-remove" style="background:rgba(255,40,40,0.15);border-color:rgba(255,40,40,0.3);color:#ff4444;" onclick="banUser(\'' + safeU + '\')">🔨 Ban</button>'
+                )
+              : '') +
+          '</div>' +
+        '</div>' +
+        (u.banned ? '<div style="background:rgba(255,40,40,0.1);border:1px solid rgba(255,40,40,0.25);border-radius:10px;padding:10px 14px;color:#ff4444;font-size:0.82rem;margin-bottom:16px;">⛔ This account is banned.</div>' : '') +
+        '<div style="background:#0f0f1a;border:1px solid #2e2e50;border-radius:12px;padding:16px;text-align:left;">' +
+          '<div style="color:#7c6aff;font-size:0.78rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">Owned Scripts</div>' +
+          (priv && !(me && isOwner(me.username))
+            ? '<div style="color:#555;font-size:0.85rem;">🔒 This user has private purchases.</div>'
+            : (owned.length === 0
+                ? '<div style="color:#555;font-size:0.85rem;">No premium scripts purchased yet.</div>'
+                : owned.map(function(s){
+                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #22223a;">' +
+                      '<div>' +
+                        '<div style="color:#fff;font-size:0.88rem;font-weight:600;">' + s.name + '</div>' +
+                        '<div style="color:#555;font-size:0.76rem;">' + s.game + '</div>' +
+                      '</div>' +
+                      '<div style="display:flex;align-items:center;gap:8px;">' +
+                        '<span style="color:#cc88ff;font-size:0.82rem;font-weight:700;">€' + s.price.toFixed(2) + '</span>' +
+                        (me && isOwner(me.username) && me.username !== username
+                          ? '<button class="btn-refund" style="font-size:0.72rem;padding:3px 8px;" onclick="revokeScript(\'' + escHtml(username) + '\',\'' + s.id + '\')">Revoke</button>'
+                          : '') +
+                      '</div>' +
+                    '</div>';
+                  }).join('')
+              )
+          ) +
+        '</div>';
+
+      openOverlay('view-profile-overlay');
+    }
+
+    // ── OWNER ──
+    function isOwner(username) { return username === 'Skirilo15'; }
+
+    function isAdmin(username) {
+      if (isOwner(username)) return false;
+      var u = getUsers().find(function(x){ return x.username === username; });
+      return u ? u.role === 'admin' : false;
+    }
+
+    function canAccessAdmin(username) { return isOwner(username) || isAdmin(username); }
+
+    function ownerTag() { return '<span class="owner-tag">👑 Owner</span>'; }
+    function adminTag() { return '<span class="admin-tag">🛡 Admin</span>'; }
+
+    function roleTag(username) {
+      if (isOwner(username)) return ' ' + ownerTag();
+      if (isAdmin(username)) return ' ' + adminTag();
+      return '';
+    }
+
+    // ── REFUND ──
+    function requestRefund(scriptId) {
+      var s = SCRIPTS.find(function(x){ return x.id === scriptId; });
+      if (!s) return;
+      document.getElementById('refund-sub').textContent = s.name + ' · €' + s.price.toFixed(2);
+      document.getElementById('refund-confirm-btn').onclick = function() {
+        var users = getUsers();
+        var name  = _ls.getItem('lb_current');
+        var user  = users.find(function(u){ return u.username === name; });
+        if (user) {
+          user.purchases = user.purchases.filter(function(id){ return id !== scriptId; });
+          saveUsers(users);
+        }
+        closeOverlay('refund-overlay');
+        renderAll();
+        showToast('Refund requested for ' + s.name + '. Contact Discord for your money back.');
+      };
+      openOverlay('refund-overlay');
+    }
+
+    // ── CART ──
+    function getCart()     { return JSON.parse(_ls.getItem('lb_cart') || '[]'); }
+    function saveCart(c)   { _ls.setItem('lb_cart', JSON.stringify(c)); }
+
+    function addToCart(id) {
+      var c = getCart();
+      if (c.indexOf(id) === -1) c.push(id);
+      saveCart(c); renderCartBtn(); renderScripts();
+    }
+
+    function removeFromCart(id) {
+      saveCart(getCart().filter(function(x){ return x !== id; }));
+      renderCartBtn(); renderScripts(); renderCartModal();
+    }
+
+    function inCart(id) { return getCart().indexOf(id) !== -1; }
+
+    function renderCartBtn() {
+      var count = getCart().length;
+      document.getElementById('nav-cart').innerHTML =
+        '<button class="cart-nav-btn" onclick="openCartModal()">' +
+          '🛒' +
+          (count > 0 ? '<span class="cart-count">' + count + '</span>' : '') +
+        '</button>';
+    }
+
+    function openCartModal() {
+      renderCartModal();
+      openOverlay('cart-overlay');
+    }
+
+    function renderCartModal() {
+      var cart    = getCart();
+      var user    = getCurrentUser();
+      var items   = cart.map(function(id){ return SCRIPTS.find(function(s){ return s.id === id; }); }).filter(Boolean);
+      var total   = items.reduce(function(sum, s){ return sum + (s.price || 0); }, 0);
+      var listEl  = document.getElementById('cart-items-list');
+      var totalEl = document.getElementById('cart-total');
+      var checkEl = document.getElementById('checkout-btn');
+
+      if (items.length === 0) {
+        listEl.innerHTML = '<div class="cart-empty">Your cart is empty.<br>Add premium scripts from the Scripts page.</div>';
+      } else {
+        listEl.innerHTML = items.map(function(s) {
+          return '<div class="cart-item">' +
+            '<div class="cart-item-info">' +
+              '<div class="cart-item-name">' + s.name + '</div>' +
+              '<div class="cart-item-game">' + s.game + '</div>' +
+            '</div>' +
+            '<span class="cart-item-price">€' + s.price.toFixed(2) + '</span>' +
+            '<button class="btn-cart-remove" onclick="removeFromCart(\'' + s.id + '\')">Remove</button>' +
+          '</div>';
+        }).join('');
+      }
+
+      totalEl.textContent = '€' + total.toFixed(2);
+      checkEl.disabled    = items.length === 0 || !user;
+      checkEl.textContent = !user ? 'Login to Checkout' : 'Complete Purchase';
+    }
+
+    function checkoutCart() {
+      var cart = getCart();
+      cart.forEach(function(id){ purchaseScript(id); });
+      saveCart([]);
+      closeOverlay('cart-overlay');
+      renderCartBtn();
+      renderScripts();
+      showToast('Purchase complete! All scripts unlocked.');
+    }
+
+    // ── RATINGS ──
+    function getRatings()  { return JSON.parse(_ls.getItem('lb_ratings') || '{}'); }
+    function saveRatings(r){ _ls.setItem('lb_ratings', JSON.stringify(r)); }
+    function avgRating(scriptId) {
+      var r = getRatings()[scriptId];
+      if (!r) return null;
+      var vals = Object.keys(r).map(function(k){ return r[k]; });
+      if (!vals.length) return null;
+      return { avg: (vals.reduce(function(a,b){ return a+b; },0) / vals.length), count: vals.length };
+    }
+    function rateScript(scriptId, stars) {
+      var me = getCurrentUser();
+      if (!me) return;
+      var all = getRatings();
+      if (!all[scriptId]) all[scriptId] = {};
+      all[scriptId][me.username] = stars;
+      saveRatings(all);
+      renderScripts();
+    }
+    function starsHtml(avg) {
+      var full = Math.round(avg);
+      var s = '';
+      for (var i=1;i<=5;i++) s += (i<=full ? '★' : '☆');
+      return s;
+    }
+    function starPickHtml(scriptId) {
+      var me = getCurrentUser();
+      var myRating = me && getRatings()[scriptId] ? (getRatings()[scriptId][me.username] || 0) : 0;
+      var html = '<div class="stars-pick" id="spick-' + scriptId + '">';
+      for (var i=1;i<=5;i++) {
+        html += '<span class="' + (i<=myRating ? 'lit':'') + '" ' +
+          'onmouseover="hoverStars(\'' + scriptId + '\',' + i + ')" ' +
+          'onmouseout="resetStars(\'' + scriptId + '\',' + myRating + ')" ' +
+          'onclick="rateScript(\'' + scriptId + '\',' + i + ')">' +
+          (i<=myRating ? '★':'☆') + '</span>';
+      }
+      return html + '</div>';
+    }
+    function hoverStars(id, n) {
+      var el = document.getElementById('spick-'+id);
+      if (!el) return;
+      el.querySelectorAll('span').forEach(function(s,i){ s.className = i<n ? 'lit':''; s.textContent = i<n ? '★':'☆'; });
+    }
+    function resetStars(id, myRating) {
+      var el = document.getElementById('spick-'+id);
+      if (!el) return;
+      el.querySelectorAll('span').forEach(function(s,i){ s.className = i<myRating ? 'lit':''; s.textContent = i<myRating ? '★':'☆'; });
+    }
+
+    // ── NOTIFICATIONS ──
+    function getNotifs(username) { return JSON.parse(_ls.getItem('lb_notif_' + username) || '[]'); }
+    function saveNotifs(username, arr) { _ls.setItem('lb_notif_' + username, JSON.stringify(arr)); }
+    function pushNotif(username, msg) {
+      var arr = getNotifs(username);
+      arr.unshift({ id: Date.now(), msg: msg, read: false, ts: Date.now() });
+      if (arr.length > 30) arr = arr.slice(0, 30);
+      saveNotifs(username, arr);
+      var me = getCurrentUser();
+      if (me && me.username === username) renderNotifBtn();
+    }
+    function markNotifsRead(username) {
+      var arr = getNotifs(username).map(function(n){ n.read = true; return n; });
+      saveNotifs(username, arr);
+      renderNotifBtn();
+    }
+    function clearNotifs() {
+      var me = getCurrentUser();
+      if (!me) return;
+      saveNotifs(me.username, []);
+      document.getElementById('notif-list').innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+      renderNotifBtn();
+    }
+    function timeAgo(ts) {
+      var s = Math.floor((Date.now()-ts)/1000);
+      if (s < 60)   return 'just now';
+      if (s < 3600) return Math.floor(s/60) + 'm ago';
+      if (s < 86400) return Math.floor(s/3600) + 'h ago';
+      return Math.floor(s/86400) + 'd ago';
+    }
+    function renderNotifBtn() {
+      var me = getCurrentUser();
+      var el = document.getElementById('nav-notif');
+      if (!me) { el.innerHTML = ''; return; }
+      var unread = getNotifs(me.username).filter(function(n){ return !n.read; }).length;
+      el.innerHTML = '<button class="notif-btn" onclick="openNotifPanel()">' +
+        '🔔' + (unread > 0 ? '<span class="notif-badge">' + (unread>9?'9+':unread) + '</span>' : '') +
+      '</button>';
+    }
+    function openNotifPanel() {
+      var me = getCurrentUser();
+      if (!me) return;
+      var notifs = getNotifs(me.username);
+      var el = document.getElementById('notif-list');
+      if (!notifs.length) {
+        el.innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+      } else {
+        el.innerHTML = notifs.map(function(n){
+          return '<div class="notif-item ' + (n.read?'':'unread') + '">' +
+            '<div class="notif-dot ' + (n.read?'read':'') + '"></div>' +
+            '<div><div class="notif-msg">' + n.msg + '</div>' +
+            '<div class="notif-time">' + timeAgo(n.ts) + '</div></div>' +
+          '</div>';
+        }).join('');
+      }
+      markNotifsRead(me.username);
+      openOverlay('notif-overlay');
+    }
+
+    // ── BIO ──
+    function saveBio(text) {
+      var users = getUsers();
+      var name  = _ls.getItem('lb_current');
+      var user  = users.find(function(u){ return u.username === name; });
+      if (user) { user.bio = text.trim().slice(0, 200); saveUsers(users); renderProfile(); showToast('Bio updated!'); }
+    }
+    function editBio() {
+      var me = getCurrentUser();
+      var area = document.getElementById('bio-area');
+      var ta = document.createElement('textarea');
+      ta.className = 'bio-textarea';
+      ta.id = 'bio-input';
+      ta.maxLength = 200;
+      ta.placeholder = 'Write something about yourself...';
+      ta.value = (me && me.bio) ? me.bio : '';
+      var btn = document.createElement('button');
+      btn.className = 'bio-save-btn';
+      btn.textContent = 'Save';
+      btn.onclick = function(){ saveBio(ta.value); };
+      area.innerHTML = '';
+      area.appendChild(ta);
+      area.appendChild(btn);
+    }
+
+    // ── BADGES ──
+    var BADGE_DEFS = [
+      { id:'veteran',  label:'🕐 Veteran',   color:'#a898ff', bg:'rgba(124,106,255,0.12)', border:'rgba(124,106,255,0.3)',   check: function(u){ return u.joinedAt && (Date.now()-u.joinedAt)/86400000 >= 30; } },
+      { id:'collector',label:'💎 Collector',  color:'#6ab4ff', bg:'rgba(100,180,255,0.12)', border:'rgba(100,180,255,0.3)',   check: function(u){ return (u.purchases||[]).length >= 2; } },
+      { id:'vip',      label:'⭐ VIP',        color:'#ffb400', bg:'rgba(255,180,0,0.1)',    border:'rgba(255,180,0,0.3)',     check: function(u){ return (u.purchases||[]).length >= 1; } },
+      { id:'social',   label:'🤝 Social',     color:'#64dc78', bg:'rgba(100,220,120,0.1)',  border:'rgba(100,220,120,0.25)', check: function(u){ return (u.friends||[]).length >= 1; } },
+      { id:'newcomer', label:'🌱 Newcomer',   color:'#aaa',    bg:'rgba(255,255,255,0.06)', border:'#333',                   check: function(u){ return !!u.joinedAt; } }
+    ];
+    function getBadges(user) {
+      return BADGE_DEFS.filter(function(b){ return b.check(user); });
+    }
+    function badgesHtml(user) {
+      var badges = getBadges(user);
+      if (!badges.length) return '';
+      return '<div class="badges-row">' +
+        badges.map(function(b){
+          return '<span class="badge-pill" style="color:' + b.color + ';background:' + b.bg + ';border-color:' + b.border + ';">' + b.label + '</span>';
+        }).join('') +
+      '</div>';
+    }
+
+    // ── SCRIPT FILTER ──
+    var scriptFilterTab = 'all';
+    function setScriptFilter(tab, btn) {
+      scriptFilterTab = tab;
+      document.querySelectorAll('.sft').forEach(function(b){ b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderScripts();
+    }
+
+    // ── UTILS ──
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ── AUTH ──
+    function getUsers() {
+      return JSON.parse(_ls.getItem('lb_users') || '[]').map(function(u) {
+        // Firebase drops empty arrays — always coerce back to arrays
+        if (!Array.isArray(u.purchases)) u.purchases = [];
+        if (!Array.isArray(u.friends))   u.friends   = [];
+        if (!Array.isArray(u.wishlist))  u.wishlist  = [];
+        return u;
+      });
+    }
+    function saveUsers(u)     { _ls.setItem('lb_users', JSON.stringify(u)); _fbSet('users', u); }
+    function getCurrentUser() {
+      var name = _ls.getItem('lb_current');
+      if (!name) return null;
+      return getUsers().find(function(u){ return u.username === name; }) || null;
+    }
+
+    function register(username, email, password, inviteCode) {
+      if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) return 'Username must be 3–20 characters: letters, numbers, _ or -.';
+      if (isOwner(username)) return 'This username is reserved.';
+      var code = (inviteCode || '').toUpperCase().trim();
+      if (INVITE_CODES.indexOf(code) === -1) return 'Invalid invite code. You need an invite to join.';
+      if (getUsedInvites().indexOf(code) !== -1) return 'This invite code has already been used.';
+      var users = getUsers();
+      var existing = users.find(function(u){ return u.username === username; });
+      if (existing && existing.banned) return 'This username is banned.';
+      if (existing) return 'Username already taken.';
+      if (users.find(function(u){ return u.email === email; })) return 'Email already registered.';
+      if (password.length < 6) return 'Password must be at least 6 characters.';
+      markInviteUsed(code);
+      users.push({ username: username, email: email, password: password, purchases: [], friends: [], private: false, joinedAt: Date.now() });
+      saveUsers(users);
+      _ls.setItem('lb_current', username);
+      return null;
+    }
+
+    function login(username, password) {
+      var user = getUsers().find(function(u){ return u.username === username && u.password === password; });
+      if (!user) return 'Invalid username or password.';
+      if (user.banned) return 'Your account has been banned. Contact support on Discord.';
+      _ls.setItem('lb_current', username);
+      return null;
+    }
+
+    function purchaseScript(scriptId) {
+      var script = SCRIPTS.find(function(s){ return s.id === scriptId && s.premium; });
+      if (!script) return;
+      var name = _ls.getItem('lb_current');
+      if (!name) return;
+      var users = getUsers();
+      var user  = users.find(function(u){ return u.username === name && !u.banned; });
+      if (user && user.purchases.indexOf(scriptId) === -1) {
+        user.purchases.push(scriptId);
+        saveUsers(users);
+      }
+    }
+
+    function ownsScript(scriptId) {
+      var user = getCurrentUser();
+      if (!user) return false;
+      if (isOwner(user.username)) return true;
+      return (user.purchases || []).indexOf(scriptId) !== -1;
+    }
+
+    // ── RENDER ──
+    function renderAll() {
+      updateLastSeen();
+      renderNav();
+      renderCartBtn();
+      renderNotifBtn();
+      renderThemeBtn();
+      var activePage = document.querySelector('.page.active');
+      if (activePage && activePage.id === 'page-scripts')     renderScripts();
+      if (activePage && activePage.id === 'page-profile')     renderProfile();
+      if (activePage && activePage.id === 'page-community')   renderCommunity();
+      if (activePage && activePage.id === 'page-admin')       renderAdmin();
+      if (activePage && activePage.id === 'page-leaderboard') renderLeaderboard();
+      if (activePage && activePage.id === 'page-chat')        renderChat();
+    }
+
+    function renderNav() {
+      var user    = getCurrentUser();
+      var navAuth = document.getElementById('nav-auth');
+      if (user) {
+        navAuth.innerHTML =
+          '<div class="user-menu" id="user-menu">' +
+            '<button class="user-btn" onclick="toggleUserMenu(event)">' +
+              '<div class="avatar" style="overflow:hidden;">' + avatarHtml(user.username, 26) + '</div>' +
+              escHtml(user.username) +
+              roleTag(user.username) +
+              ' ▾' +
+            '</button>' +
+            '<div class="user-dropdown" id="user-dropdown">' +
+              '<a href="#" onclick="showPage(\'profile\');return false;">Profile</a>' +
+              (canAccessAdmin(user.username) ? '<a href="#" onclick="showPage(\'admin\');return false;">⚙ Admin Panel</a>' : '') +
+              '<a href="#" class="danger" onclick="doLogout();return false;">Logout</a>' +
+            '</div>' +
+          '</div>';
+      } else {
+        navAuth.innerHTML = '<button class="btn-login-nav" onclick="openOverlay(\'login-overlay\')">Login</button>';
+      }
+    }
+
+    function renderScripts() {
+      var grid = document.getElementById('scripts-grid');
+      var user = getCurrentUser();
+      var s    = SCRIPTS[0];
+      if (!s) { grid.innerHTML = ''; return; }
+
+      var owned = user && ownsScript(s.id);
+      var ri    = avgRating(s.id);
+      var canRate = user && owned;
+
+      var ratingSection = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:24px;">' +
+        (ri ? '<span class="stars-display">' + starsHtml(ri.avg) + '</span><span class="rating-count">(' + ri.count + ')</span>'
+            : '<span class="rating-count">No ratings yet</span>') +
+        (canRate ? '<span class="rate-label" style="margin-left:4px;">· Rate:</span>' + starPickHtml(s.id) : '') +
+      '</div>';
+
+      var actionBtn;
+      if (!user) {
+        actionBtn =
+          '<button class="btn-paypal" onclick="openOverlay(\'login-overlay\')" style="background:rgba(124,106,255,0.25);box-shadow:none;">🔒 Login to Purchase</button>';
+      } else if (owned) {
+        actionBtn =
+          '<button class="featured-owned-btn" onclick="openScriptModal(\'' + s.id + '\')">Get Script ↗</button>';
+      } else {
+        /* ── PAYPAL (saved, re-enable when ready) ──────────────────────────────
+        actionBtn =
+          '<a class="btn-paypal" href="https://paypal.me/Skirilo15/' + s.price.toFixed(2) + '" target="_blank" onclick="showPaidBtn()">' +
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.1 7.4C20.5 4.3 18.2 2 14.7 2H6.8c-.5 0-1 .4-1.1.9L2.8 17.9c-.1.4.2.8.6.8h3.9l1-6.3v.2c.1-.5.6-.9 1.1-.9h2.3c4.4 0 7.9-1.8 8.9-7 0-.2.1-.5.1-.7-.1 0-.1 0 0 0-.4.1 0 0 0 0z"/><path d="M20.1 7.4c-.1.2-.1.5-.2.7-1 5.2-4.5 7-8.9 7H8.7c-.5 0-1 .4-1.1.9L6.5 22h3.4c.4 0 .8-.3.9-.7v-.2l.7-4.5v-.2c.1-.4.5-.7.9-.7h.6c3.8 0 6.8-1.5 7.6-6 .4-1.9.2-3.5-.5-4.3z"/></svg>' +
+            'Pay €' + s.price.toFixed(2) + ' with PayPal' +
+          '</a>' +
+          '<button class="btn-paid" id="paid-confirm-btn" style="display:none;" onclick="confirmPayment(\'' + s.id + '\')">' +
+            '✓ I\'ve Paid — Unlock Script' +
+          '</button>';
+        ─────────────────────────────────────────────────────────────────────── */
+        actionBtn =
+          '<button class="btn-paypal" style="background:rgba(124,106,255,0.18);box-shadow:none;cursor:default;opacity:0.6;">🔒 Purchasing coming soon</button>';
+      }
+
+      grid.innerHTML =
+        '<div class="featured-card" id="card-' + s.id + '">' +
+          '<div class="featured-icon">S</div>' +
+          '<div class="featured-name">' + s.name + '</div>' +
+          '<div class="featured-game">' + s.game + '</div>' +
+          '<div class="featured-version">' + (s.version || '') + ' · Updated ' + (s.updated || '') + (s.hasKey ? ' · Has key system' : '') + '</div>' +
+          (owned ? '' :
+            '<div class="featured-price">€' + s.price.toFixed(2) + '</div>' +
+            '<div class="featured-price-label">one-time purchase</div>'
+          ) +
+          ratingSection +
+          actionBtn +
+        '</div>';
+
+      var card = document.getElementById('card-' + s.id);
+      if (card) setTimeout(function(){ card.classList.add('visible'); }, 60);
+    }
+
+    function showPaidBtn() {
+      setTimeout(function() {
+        var btn = document.getElementById('paid-confirm-btn');
+        if (btn) btn.style.display = 'block';
+      }, 1200);
+    }
+
+    function confirmPayment(scriptId) {
+      purchaseScript(scriptId);
+      renderScripts();
+      showToast('Script unlocked! Welcome to SkiHook.');
+    }
+
+    // ── AVATAR HELPERS ──
+    function avatarHtml(username, size) {
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      var src = u ? u.avatar : null;
+      var base = 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex-shrink:0;';
+      if (src && /^data:image\//.test(src)) {
+        return '<img src="' + escHtml(src) + '" style="' + base + 'object-fit:cover;display:block;">';
+      }
+      var letter = username && username.length ? escHtml(username[0].toUpperCase()) : '?';
+      var fs = Math.round(size * 0.38) + 'px';
+      return '<div style="' + base + 'background:linear-gradient(135deg,#7c6aff,#5546e0);display:flex;align-items:center;justify-content:center;font-size:' + fs + ';font-weight:700;color:#fff;">' + letter + '</div>';
+    }
+
+    function saveAvatar(dataUrl) {
+      var users = getUsers();
+      var name  = _ls.getItem('lb_current');
+      var user  = users.find(function(u){ return u.username === name; });
+      if (!user) return;
+      user.avatar = dataUrl;
+      saveUsers(users);
+      renderProfile();
+      renderNav();
+      showToast('Profile photo updated!');
+    }
+
+    function processAvatarFile(file) {
+      if (!file || !file.type.startsWith('image/')) { showToast('Please drop an image file.'); return; }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          canvas.width = 200; canvas.height = 200;
+          var ctx = canvas.getContext('2d');
+          var sw = Math.min(img.width, img.height);
+          var sx = (img.width  - sw) / 2;
+          var sy = (img.height - sw) / 2;
+          ctx.drawImage(img, sx, sy, sw, sw, 0, 0, 200, 200);
+          saveAvatar(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function avatarDragOver(e) { e.preventDefault(); document.getElementById('avatar-upload-zone').classList.add('drag-over'); }
+    function avatarDragLeave()  { document.getElementById('avatar-upload-zone').classList.remove('drag-over'); }
+    function avatarDrop(e) {
+      e.preventDefault();
+      document.getElementById('avatar-upload-zone').classList.remove('drag-over');
+      processAvatarFile(e.dataTransfer.files[0]);
+    }
+    function avatarClick() { document.getElementById('avatar-file-input').click(); }
+    function avatarFileChange(input) { processAvatarFile(input.files[0]); input.value = ''; }
+
+    function accountDays(user) {
+      if (!user.joinedAt) return null;
+      return Math.floor((Date.now() - user.joinedAt) / 86400000);
+    }
+
+    function renderProfile() {
+      var user = getCurrentUser();
+      if (!user) { showPage('home'); return; }
+
+      var owned = SCRIPTS.filter(function(s){ return s.premium && ownsScript(s.id); });
+      var wished = SCRIPTS.filter(function(s){ return s.premium && !ownsScript(s.id) && isWished(s.id); });
+      var days  = accountDays(user);
+      var accent = getAccent(user.username);
+      var daysBadge = days !== null
+        ? '<div class="profile-days" style="border-color:' + accent + '55;background:' + accent + '18;">' +
+            '<span class="profile-days-num" style="color:' + accent + ';">' + days + '</span>' +
+            '<span class="profile-days-label" style="color:' + accent + 'cc;">' + (days === 1 ? 'day' : 'days') + ' on LuaBro</span>' +
+          '</div>'
+        : '';
+
+      // Account stats
+      var totalRatings = (function(){
+        var r = getRatings(); var count = 0;
+        Object.keys(r).forEach(function(sid){ if (r[sid][user.username]) count++; });
+        return count;
+      })();
+      var totalCopies = (function(){
+        var c = getCopies(); var count = 0;
+        Object.keys(c).forEach(function(sid){ count += c[sid] || 0; });
+        return count;
+      })();
+
+      // Accent swatches
+      var swatchesHtml = '<div class="color-swatches">' +
+        ACCENT_COLORS.map(function(c){
+          return '<div class="color-sw' + (c === accent ? ' sel' : '') + '" style="background:' + c + ';" onclick="setAccent(\'' + c + '\')" title="' + c + '"></div>';
+        }).join('') +
+      '</div>';
+
+      document.getElementById('profile-content').innerHTML =
+        '<div class="profile-header" style="border-color:' + accent + ';box-shadow:0 0 0 1px ' + accent + '44,0 0 18px ' + accent + '22;">' +
+          '<div id="avatar-upload-zone" class="avatar-upload-zone" onclick="avatarClick()" ondragover="avatarDragOver(event)" ondragleave="avatarDragLeave()" ondrop="avatarDrop(event)" title="Click or drop image to change">' +
+            avatarHtml(user.username, 64) +
+            '<div class="avatar-upload-overlay">📷</div>' +
+            '<input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="avatarFileChange(this)">' +
+          '</div>' +
+          '<div class="profile-info">' +
+            '<h2>' + escHtml(user.username) + roleTag(user.username) + '</h2>' +
+            '<p>' + escHtml(user.email) + '</p>' +
+            daysBadge +
+            badgesHtml(user) +
+            '<div class="bio-section" id="bio-area">' +
+              (user.bio
+                ? '<span class="bio-text">"' + escHtml(user.bio) + '"</span>'
+                : '<span class="bio-placeholder">No bio yet.</span>') +
+              '<button class="bio-edit-btn" onclick="editBio()" title="Edit bio">✏</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="profile-section">' +
+          '<h3 style="color:' + accent + ';">Account Stats</h3>' +
+          '<div style="display:flex;gap:14px;flex-wrap:wrap;">' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#a898ff;">' + owned.length + '</div><div class="admin-stat-label">Scripts Owned</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#64dc78;">' + (user.friends||[]).length + '</div><div class="admin-stat-label">Friends</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#ffb400;">' + totalRatings + '</div><div class="admin-stat-label">Ratings Given</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#6ab4ff;">' + (user.profileViews||0) + '</div><div class="admin-stat-label">Profile Views</div></div>' +
+            '<div class="admin-stat"><div class="admin-stat-num" style="color:#ff6496;">' + wished.length + '</div><div class="admin-stat-label">Wishlisted</div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="profile-section">' +
+          '<h3 style="color:' + accent + ';">Owned Scripts</h3>' +
+          (owned.length === 0
+            ? '<p class="no-owned">No premium scripts purchased yet.</p>'
+            : owned.map(function(s){
+                return '<div class="owned-item">' +
+                  '<div>' +
+                    '<div class="owned-item-name">' + s.name + '</div>' +
+                    '<div class="owned-item-game">' + s.game + ' · €' + s.price.toFixed(2) + '</div>' +
+                  '</div>' +
+                  '<button class="btn-refund" onclick="requestRefund(\'' + s.id + '\')">Refund</button>' +
+                '</div>';
+              }).join('')
+          ) +
+        '</div>' +
+
+        (wished.length > 0
+          ? '<div class="profile-section">' +
+              '<h3 style="color:' + accent + ';">Wishlist</h3>' +
+              wished.map(function(s){
+                return '<div class="owned-item">' +
+                  '<div>' +
+                    '<div class="owned-item-name">' + s.name + '</div>' +
+                    '<div class="owned-item-game">' + s.game + ' · €' + s.price.toFixed(2) + '</div>' +
+                  '</div>' +
+                  '<div style="display:flex;gap:6px;">' +
+                    '<button class="btn-card btn-card-buy" style="padding:5px 12px;font-size:0.78rem;" onclick="openBuyModal(\'' + s.id + '\')">Buy</button>' +
+                    '<button class="btn-wish wished" style="width:32px;height:32px;" onclick="toggleWish(\'' + s.id + '\')">♥</button>' +
+                  '</div>' +
+                '</div>';
+              }).join('') +
+            '</div>'
+          : '') +
+
+        (function(){
+          var friends = getFriends();
+          var friendUsers = friends.map(function(name){
+            return getUsers().find(function(u){ return u.username === name; });
+          }).filter(Boolean);
+          return '<div class="profile-section">' +
+            '<h3 style="color:' + accent + ';">Friends (' + friends.length + ')</h3>' +
+            (friendUsers.length === 0
+              ? '<p class="no-owned">No friends added yet. Visit Community to add friends.</p>'
+              : friendUsers.map(function(u){
+                  var safeUN2 = escHtml(u.username);
+                return '<div class="owned-item">' +
+                    '<div>' +
+                      '<div class="owned-item-name">' + safeUN2 + roleTag(u.username) + '</div>' +
+                      '<div style="display:flex;align-items:center;gap:6px;">' +
+                        onlineHtml(u.username) +
+                        '<span class="owned-item-game">' + (isPrivate(u.username) ? '🔒 Private' : ((u.purchases||[]).length + ' script(s) owned')) + '</span>' +
+                      '</div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:6px;">' +
+                      '<button class="btn-friend btn-friend-add" style="font-size:0.75rem;padding:5px 10px;" onclick="viewProfile(\'' + safeUN2 + '\')">View</button>' +
+                      '<button class="btn-refund" style="border-color:rgba(255,80,80,0.25);color:#ff6060" onclick="toggleFriend(\'' + safeUN2 + '\')">Remove</button>' +
+                    '</div>' +
+                  '</div>';
+                }).join('')
+            ) +
+          '</div>';
+        })() +
+
+        '<div class="profile-section">' +
+          '<h3 style="color:' + accent + ';">Settings</h3>' +
+          '<div class="settings-row">' +
+            '<div>' +
+              '<div class="settings-label">Private Purchases</div>' +
+              '<div class="settings-desc">Hide your owned scripts from other users</div>' +
+            '</div>' +
+            '<label class="toggle">' +
+              '<input type="checkbox" id="privacy-toggle" ' + (user.private ? 'checked' : '') + ' onchange="togglePrivacy()">' +
+              '<span class="toggle-slider"></span>' +
+            '</label>' +
+          '</div>' +
+          '<div class="settings-row">' +
+            '<div>' +
+              '<div class="settings-label">Accent Color</div>' +
+              '<div class="settings-desc">Personalise your profile border color</div>' +
+            '</div>' +
+            swatchesHtml +
+          '</div>' +
+          '<div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;">' +
+            '<div>' +
+              '<div class="settings-label">Change Password</div>' +
+              '<div class="settings-desc">Update your account password</div>' +
+            '</div>' +
+            '<button class="admin-btn admin-btn-grey" onclick="document.getElementById(\'pw-form\').style.display=document.getElementById(\'pw-form\').style.display===\'none\'?\'\':\'none\'">Change Password</button>' +
+            '<div id="pw-form" style="display:none;width:100%;">' +
+              '<div class="form-error" id="pw-error" style="margin-bottom:8px;"></div>' +
+              '<input type="password" id="pw-current" class="community-search-input" style="margin-bottom:8px;" placeholder="Current password">' +
+              '<input type="password" id="pw-new" class="community-search-input" style="margin-bottom:8px;" placeholder="New password (min 6 chars)">' +
+              '<input type="password" id="pw-confirm" class="community-search-input" style="margin-bottom:8px;" placeholder="Confirm new password">' +
+              '<button class="btn-auth" style="width:auto;padding:9px 20px;font-size:0.85rem;" onclick="changePassword()">Save Password</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn-logout" onclick="doLogout()">Logout</button>';
+    }
+
+    // ── PAGES ──
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+      document.getElementById('page-' + name).classList.add('active');
+
+      document.querySelectorAll('.nav-link').forEach(function(l){ l.classList.remove('active'); });
+      var link = document.querySelector('.nav-link[data-page="' + name + '"]');
+      if (link) link.classList.add('active');
+
+      updateLastSeen();
+      if (name === 'scripts')     renderScripts();
+      if (name === 'profile')     renderProfile();
+      if (name === 'community')   renderCommunity();
+      if (name === 'admin')       renderAdmin();
+      if (name === 'leaderboard') renderLeaderboard();
+      if (name === 'chat')        renderChat();
+    }
+
+    document.querySelectorAll('.nav-link[data-page]').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        showPage(this.getAttribute('data-page'));
+      });
+    });
+
+    // ── OVERLAYS ──
+    function openOverlay(id)  { document.getElementById(id).classList.add('active'); }
+    function closeOverlay(id) { document.getElementById(id).classList.remove('active'); }
+
+    function closeOnOverlay(e, id) {
+      if (e.target === document.getElementById(id)) closeOverlay(id);
+    }
+
+    // ── AUTH HANDLERS ──
+    function switchAuthTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+      document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
+      document.getElementById('login-error').textContent = '';
+      document.getElementById('register-error').textContent = '';
+    }
+
+    function doLogin() {
+      var username = document.getElementById('login-username').value.trim();
+      var password = document.getElementById('login-password').value;
+      var err = login(username, password);
+      if (err) { document.getElementById('login-error').textContent = err; return; }
+      var cancelBtn = document.querySelector('#login-overlay .btn-modal-close');
+      if (cancelBtn) cancelBtn.style.display = '';
+      closeOverlay('login-overlay');
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      checkBanStatus();
+      renderAll();
+      showToast('Welcome back, ' + username + '!');
+    }
+
+    function doRegister() {
+      var username   = document.getElementById('reg-username').value.trim();
+      var email      = document.getElementById('reg-email').value.trim();
+      var password   = document.getElementById('reg-password').value;
+      var inviteCode = document.getElementById('reg-invite').value.trim();
+      var err = register(username, email, password, inviteCode);
+      if (err) { document.getElementById('register-error').textContent = err; return; }
+      var cancelBtn = document.querySelector('#login-overlay .btn-modal-close');
+      if (cancelBtn) cancelBtn.style.display = '';
+      closeOverlay('login-overlay');
+      document.getElementById('reg-username').value = '';
+      document.getElementById('reg-email').value    = '';
+      document.getElementById('reg-password').value = '';
+      document.getElementById('reg-invite').value   = '';
+      renderAll();
+      showToast('Account created! Welcome, ' + username + '!');
+    }
+
+    function doLogout() {
+      _ls.removeItem('lb_current');
+      closeOverlay('login-overlay');
+      renderAll();
+      showPage('home');
+      showToast('Logged out.');
+    }
+
+    // ── USER DROPDOWN ──
+    function toggleUserMenu(e) {
+      e.stopPropagation();
+      document.getElementById('user-dropdown').classList.toggle('open');
+    }
+
+    document.addEventListener('click', function() {
+      var dd = document.getElementById('user-dropdown');
+      if (dd) dd.classList.remove('open');
+    });
+
+    // ── BUY MODAL ──
+    function openBuyModal(scriptId) {
+      var s = SCRIPTS.find(function(x){ return x.id === scriptId; });
+      document.getElementById('buy-title').textContent    = 'Buy ' + s.name;
+      document.getElementById('buy-sub').textContent      = s.game;
+      document.getElementById('buy-price-display').textContent = '€' + s.price.toFixed(2);
+      document.getElementById('buy-confirm-btn').onclick  = function() {
+        purchaseScript(scriptId);
+        closeOverlay('buy-overlay');
+        renderScripts();
+        showToast(s.name + ' unlocked! Enjoy the script.');
+      };
+      openOverlay('buy-overlay');
+    }
+
+    // ── SCRIPT MODAL ──
+    var currentScriptCode = '';
+    var currentScriptId   = '';
+
+    function openScriptModal(scriptId) {
+      var s = SCRIPTS.find(function(x){ return x.id === scriptId; });
+      currentScriptCode = s.code;
+      currentScriptId   = s.id;
+      document.getElementById('modal-title').textContent = s.name;
+      var copies = getCopyCount(s.id);
+      var versionInfo = (s.version ? s.version : '') + (s.updated ? ' · Updated ' + s.updated : '');
+      var copiesInfo  = copies > 0 ? ' · ' + copies + ' cop' + (copies === 1 ? 'y' : 'ies') : '';
+      document.getElementById('modal-sub').textContent = s.game + (versionInfo ? ' · ' + versionInfo : '') + copiesInfo;
+      document.getElementById('script-code').textContent = s.code;
+      document.getElementById('script-box').classList.remove('active');
+      document.getElementById('howto-box').classList.remove('active');
+      var warn = document.getElementById('key-warning');
+      s.hasKey ? warn.classList.add('visible') : warn.classList.remove('visible');
+      document.getElementById('copy-btn').textContent = 'Copy Loader';
+      document.getElementById('copy-btn').classList.remove('copied');
+      // wire download button if script has a local file
+      var dlBtn = document.getElementById('script-dl-btn');
+      if (dlBtn) {
+        if (s.file) {
+          dlBtn.href = s.file;
+          dlBtn.download = s.file;
+          dlBtn.style.display = 'flex';
+          dlBtn.style.alignItems = 'center';
+        } else {
+          dlBtn.style.display = 'none';
+        }
+      }
+      openOverlay('script-overlay');
+    }
+
+    function showScriptCode() {
+      document.getElementById('howto-box').classList.remove('active');
+      document.getElementById('script-box').classList.add('active');
+      document.getElementById('copy-btn').textContent = 'Copy Script';
+      document.getElementById('copy-btn').classList.remove('copied');
+    }
+
+    function showHowTo() {
+      document.getElementById('script-box').classList.remove('active');
+      document.getElementById('howto-box').classList.add('active');
+    }
+
+    function copyScript() {
+      function onCopied() {
+        incrementCopy(currentScriptId);
+        var btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy Script'; btn.classList.remove('copied'); }, 2000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentScriptCode).then(onCopied).catch(function() { fallbackCopy(onCopied); });
+      } else {
+        fallbackCopy(onCopied);
+      }
+    }
+    function fallbackCopy(cb) {
+      var ta = document.createElement('textarea');
+      ta.value = currentScriptCode;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); if (cb) cb(); } catch(e) { showToast('Copy failed — please copy manually.'); }
+      document.body.removeChild(ta);
+    }
+
+    // ── TOAST ──
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 3000);
+    }
+
+    // ── THEME ──
+    function getTheme() { return _ls.getItem('lb_theme') || 'dark'; }
+    function applyTheme() { document.body.classList.toggle('light', getTheme() === 'light'); }
+    function toggleTheme() {
+      _ls.setItem('lb_theme', getTheme() === 'dark' ? 'light' : 'dark');
+      applyTheme(); renderThemeBtn();
+    }
+    function renderThemeBtn() {
+      var el = document.getElementById('nav-theme');
+      if (!el) return;
+      el.innerHTML = '<button class="btn-theme" onclick="toggleTheme()" title="Toggle theme">' + (getTheme() === 'light' ? '🌙 Dark' : '☀️ Light') + '</button>';
+    }
+
+    // ── ONLINE STATUS ──
+    function updateLastSeen() {
+      var me = getCurrentUser();
+      if (me) _ls.setItem('lb_lastseen_' + me.username, Date.now().toString());
+    }
+    function getLastSeen(username) {
+      var ts = _ls.getItem('lb_lastseen_' + username);
+      return ts ? parseInt(ts) : null;
+    }
+    function isOnline(username) {
+      var ts = getLastSeen(username);
+      return !!(ts && (Date.now() - ts) < 3 * 60 * 1000);
+    }
+    function onlineHtml(username) {
+      var on = isOnline(username);
+      var ts = getLastSeen(username);
+      var label = on ? 'Online now' : (ts ? 'Last seen ' + timeAgo(ts) : 'Never seen');
+      return '<span class="online-dot ' + (on ? 'on' : 'off') + '" title="' + label + '"></span><span style="font-size:0.72rem;color:' + (on ? '#64dc78' : '#555') + ';">' + label + '</span>';
+    }
+
+    // ── WISHLIST ──
+    function getWishlist() { var me = getCurrentUser(); return me ? (me.wishlist || []) : []; }
+    function isWished(id) { return getWishlist().indexOf(id) !== -1; }
+    function toggleWish(id) {
+      var users = getUsers();
+      var name  = _ls.getItem('lb_current');
+      var u = users.find(function(x){ return x.username === name; });
+      if (!u) { openOverlay('login-overlay'); return; }
+      if (!u.wishlist) u.wishlist = [];
+      var idx = u.wishlist.indexOf(id);
+      if (idx === -1) { u.wishlist.push(id); showToast('Added to wishlist!'); }
+      else            { u.wishlist.splice(idx, 1); showToast('Removed from wishlist.'); }
+      saveUsers(users);
+      renderScripts();
+    }
+
+    // ── COPY COUNTER ──
+    function getCopies() { return JSON.parse(_ls.getItem('lb_copies') || '{}'); }
+    function saveCopies(c) { _ls.setItem('lb_copies', JSON.stringify(c)); }
+    function incrementCopy(id) { var c = getCopies(); c[id] = (c[id] || 0) + 1; saveCopies(c); }
+    function getCopyCount(id) { return getCopies()[id] || 0; }
+
+    // ── PROFILE VIEW COUNTER ──
+    function trackProfileView(username) {
+      var me = getCurrentUser();
+      if (!me || me.username === username) return;
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { u.profileViews = (u.profileViews || 0) + 1; saveUsers(users); }
+    }
+
+    // ── ANNOUNCEMENT ──
+    function getAnnouncement() { return JSON.parse(_ls.getItem('lb_announcement') || 'null'); }
+    function saveAnnouncement(text) {
+      if (!text || !text.trim()) {
+        _ls.removeItem('lb_announcement');
+        _fbSet('announcement', null);
+      } else {
+        var me = getCurrentUser();
+        var ann = { text: text.trim(), author: me ? me.username : '?', ts: Date.now() };
+        _ls.setItem('lb_announcement', JSON.stringify(ann));
+        _fbSet('announcement', ann);
+      }
+      renderAnnouncement();
+      showToast(text && text.trim() ? 'Announcement posted!' : 'Announcement cleared.');
+    }
+    function renderAnnouncement() {
+      var el  = document.getElementById('site-announcement');
+      if (!el) return;
+      var ann = getAnnouncement();
+      var dismissed = _ss.getItem('lb_ann_dismissed');
+      if (ann && dismissed !== String(ann.ts)) {
+        el.style.display = 'block';
+        document.getElementById('ann-text').textContent = '📢 ' + ann.text;
+      } else {
+        el.style.display = 'none';
+      }
+    }
+    function dismissAnnouncement() {
+      var ann = getAnnouncement();
+      if (ann) _ss.setItem('lb_ann_dismissed', String(ann.ts));
+      renderAnnouncement();
+    }
+
+    // ── LEADERBOARD ──
+    var lbTab = 'purchases';
+    function setLbTab(tab, btn) {
+      lbTab = tab;
+      document.querySelectorAll('.lb-tab').forEach(function(b){ b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderLeaderboard();
+    }
+    function renderLeaderboard() {
+      var el = document.getElementById('lb-content');
+      if (!el) return;
+      var users = getUsers().filter(function(u){ return !u.banned; });
+      if (lbTab === 'purchases') users.sort(function(a,b){ return (b.purchases||[]).length - (a.purchases||[]).length; });
+      else if (lbTab === 'friends') users.sort(function(a,b){ return (b.friends||[]).length - (a.friends||[]).length; });
+      else users.sort(function(a,b){ return (b.profileViews||0) - (a.profileViews||0); });
+      if (!users.length) { el.innerHTML = '<div style="color:#555;text-align:center;padding:40px;">No users yet.</div>'; return; }
+      var colLabel = lbTab==='purchases' ? 'Scripts Owned' : lbTab==='friends' ? 'Friends' : 'Profile Views';
+      el.innerHTML = '<div class="lb-table-wrap"><table class="lb-table"><thead><tr>' +
+        '<th>#</th><th>User</th><th>' + colLabel + '</th><th>Online</th>' +
+        '</tr></thead><tbody>' +
+        users.slice(0, 20).map(function(u, i) {
+          var rc = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+          var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+          var val = lbTab==='purchases'?(u.purchases||[]).length:lbTab==='friends'?(u.friends||[]).length:(u.profileViews||0);
+          var safeUN3 = escHtml(u.username);
+          return '<tr class="lb-row" onclick="viewProfile(\'' + safeUN3 + '\')">' +
+            '<td class="lb-rank ' + rc + '">' + medal + '</td>' +
+            '<td><div style="display:flex;align-items:center;gap:8px;">' +
+              '<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;">' + avatarHtml(u.username, 32) + '</div>' +
+              '<div style="color:#fff;font-size:0.88rem;font-weight:700;">' + safeUN3 + roleTag(u.username) + '</div>' +
+            '</div></td>' +
+            '<td style="color:#a898ff;font-weight:800;font-size:1rem;">' + val + '</td>' +
+            '<td>' + onlineHtml(u.username) + '</td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
+
+    // ── PASSWORD CHANGE ──
+    function changePassword() {
+      var cur = document.getElementById('pw-current').value;
+      var nw  = document.getElementById('pw-new').value;
+      var con = document.getElementById('pw-confirm').value;
+      var errEl = document.getElementById('pw-error');
+      errEl.textContent = '';
+      var me = getCurrentUser();
+      if (!me) return;
+      if (me.password !== cur) { errEl.textContent = 'Current password is incorrect.'; return; }
+      if (nw.length < 6) { errEl.textContent = 'New password must be at least 6 characters.'; return; }
+      if (nw !== con) { errEl.textContent = 'Passwords do not match.'; return; }
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === me.username; });
+      if (u) { u.password = nw; saveUsers(users); }
+      document.getElementById('pw-current').value = '';
+      document.getElementById('pw-new').value = '';
+      document.getElementById('pw-confirm').value = '';
+      document.getElementById('pw-form').style.display = 'none';
+      showToast('Password changed successfully!');
+    }
+
+    // ── ACCENT COLOR ──
+    var ACCENT_COLORS = ['#7c6aff','#ff6496','#64dc78','#ffb400','#6ab4ff','#ff6b35','#cc88ff','#ffffff'];
+    function getAccent(username) {
+      var u = getUsers().find(function(x){ return x.username === username; });
+      return (u && u.accent) ? u.accent : '#7c6aff';
+    }
+    function setAccent(color) {
+      var users = getUsers();
+      var name  = _ls.getItem('lb_current');
+      var u = users.find(function(x){ return x.username === name; });
+      if (u) { u.accent = color; saveUsers(users); renderProfile(); showToast('Accent color updated!'); }
+    }
+
+    // ── ADMIN NOTES ──
+    function resetInvite(code) {
+      var used = getUsedInvites().filter(function(c){ return c !== code; });
+      _ls.setItem('lb_used_invites', JSON.stringify(used));
+      _fbSet('usedInvites', used);
+      renderAdmin();
+      showToast('Invite ' + code + ' reset to Available.');
+    }
+
+    function resetAllInvites() {
+      _ls.setItem('lb_used_invites', '[]');
+      _fbSet('usedInvites', []);
+      renderAdmin();
+      showToast('All invite codes reset.');
+    }
+
+    function saveUserNote(username) {
+      var el = document.getElementById('note-input-' + username);
+      if (!el) return;
+      var users = getUsers();
+      var u = users.find(function(x){ return x.username === username; });
+      if (u) { u.adminNote = el.value.trim(); saveUsers(users); renderAdmin(); showToast('Note saved for ' + username + '.'); }
+    }
+
+    // ── CHAT ──
+    function getMessages() { return JSON.parse(_ls.getItem('lb_chat') || '[]'); }
+    function saveMessages(m) { _ls.setItem('lb_chat', JSON.stringify(m)); _fbSet('chat', m); }
+
+    function renderChat() {
+      var me = getCurrentUser();
+      var msgs = getMessages();
+      var msgsEl = document.getElementById('chat-messages');
+      var inputArea = document.getElementById('chat-input-area');
+      if (!msgsEl || !inputArea) return;
+
+      if (!msgs.length) {
+        msgsEl.innerHTML = '<div class="chat-empty">No messages yet.<br>Be the first to say something! 💬</div>';
+      } else {
+        msgsEl.innerHTML = msgs.map(function(m) {
+          var isMe = me && m.username === me.username;
+          return '<div class="chat-msg' + (isMe ? ' chat-msg-right' : '') + '">' +
+            '<div style="flex-shrink:0;border-radius:50%;overflow:hidden;">' + avatarHtml(m.username, 32) + '</div>' +
+            '<div class="chat-bubble' + (isMe ? ' chat-bubble-own' : '') + '">' +
+              (!isMe ? '<div class="chat-bubble-name">' + escHtml(m.username) + roleTag(m.username) + '</div>' : '') +
+              '<div class="chat-bubble-text">' + escHtml(m.text) + '</div>' +
+              '<div class="chat-bubble-time">' + timeAgo(m.ts) + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+      }
+
+      if (me) {
+        inputArea.innerHTML =
+          '<div class="chat-input-row">' +
+            '<input type="text" class="chat-input" id="chat-text" placeholder="Type a message…" maxlength="300"' +
+              ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();sendMessage();}">' +
+            '<button class="chat-send-btn" onclick="sendMessage()">Send</button>' +
+          '</div>';
+      } else {
+        inputArea.innerHTML =
+          '<div class="chat-login-prompt">' +
+            '🔒 <button class="btn-login-nav" onclick="openOverlay(\'login-overlay\')">Login</button> to join the chat.' +
+          '</div>';
+      }
+    }
+
+    function sendMessage() {
+      var me = getCurrentUser();
+      if (!me) return;
+      var inp = document.getElementById('chat-text');
+      if (!inp) return;
+      var text = inp.value.trim();
+      if (!text) return;
+      var msgs = getMessages();
+      msgs.push({ username: me.username, text: text, ts: Date.now() });
+      if (msgs.length > 100) msgs = msgs.slice(-100);
+      saveMessages(msgs);
+      inp.value = '';
+      renderChat();
+    }
+
+    // ── SCROLL TO TOP ──
+    window.addEventListener('scroll', function() {
+      var btn = document.getElementById('scroll-top-btn');
+      if (btn) btn.classList.toggle('visible', window.scrollY > 300);
+    });
+    function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+    // ── KEYBOARD SHORTCUTS ──
+    document.addEventListener('keydown', function(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.overlay.active').forEach(function(o){ o.classList.remove('active'); });
+      }
+      if (e.key === '/') {
+        var activePage = document.querySelector('.page.active');
+        if (activePage && activePage.id === 'page-scripts') {
+          e.preventDefault();
+          var inp = document.getElementById('script-search');
+          if (inp) { inp.focus(); inp.select(); }
+        }
+      }
+    });
+
+    // ── INIT ──
+    applyTheme();
+    checkBanStatus();
+    renderNav();
+    renderCartBtn();
+    renderNotifBtn();
+    renderThemeBtn();
+    renderAnnouncement();
+    updateLastSeen();
+    initFirebase(); // start cross-device sync (only runs when FB_URL is set)
+
+    // Force login/register if no account — skihook is invite-only
+    (function enforceAuth() {
+      if (!getCurrentUser()) {
+        openOverlay('login-overlay');
+        // Hide the Cancel button — can't dismiss without logging in
+        var cancelBtn = document.querySelector('#login-overlay .btn-modal-close');
+        if (cancelBtn) cancelBtn.style.display = 'none';
+      }
+    })();
+  </script>
+
+</body>
+</html>
